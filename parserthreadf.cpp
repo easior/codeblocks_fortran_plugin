@@ -159,6 +159,13 @@ bool ParserThreadF::Parse()
         {
             HandleInclude();
         }
+        else if (tok_low.GetChar(0) == '#')
+        {
+            if (tok_low.Matches(_T("#include")))
+                HandleInclude();
+            else
+                m_Tokens.SkipToEOL();
+        }
         else if (tok_low.Matches(_T("interface")))
         {
         	HandleInterface();
@@ -467,6 +474,13 @@ void ParserThreadF::HandleModule()
         else if (tok_low.Matches(_T("include")))
         {
             HandleInclude();
+        }
+        else if (tok_low.GetChar(0) == '#')
+        {
+            if (tok_low.Matches(_T("#include")))
+                HandleInclude();
+            else
+                m_Tokens.SkipToEOL();
         }
         else if (tok_low.Matches(_T("private")))
         {
@@ -783,6 +797,13 @@ void ParserThreadF::HandleSubmodule()
         {
             HandleInclude();
         }
+        else if (tok_low.GetChar(0) == '#')
+        {
+            if (tok_low.Matches(_T("#include")))
+                HandleInclude();
+            else
+                m_Tokens.SkipToEOL();
+        }
         else if (tok_low.Matches(_T("module")) && nex_low.Matches(_T("procedure")))
         {
             m_Tokens.GetToken();
@@ -1024,6 +1045,13 @@ void ParserThreadF::ParseDeclarations(bool breakAtEnd, bool breakAtContains)
 		else if (m_LastTokenName.IsSameAs(_T("include")))
         {
             HandleInclude();
+        }
+        else if (m_LastTokenName.GetChar(0) == '#')
+        {
+            if (m_LastTokenName.IsSameAs(_T("#include")))
+                HandleInclude();
+            else
+                m_Tokens.SkipToEOL();
         }
         else if (m_LastTokenName.IsSameAs(_T("interface")))
         {
@@ -1461,6 +1489,13 @@ void ParserThreadF::HandleSelectTypeConstruct()
         {
             HandleInclude();
         }
+        else if (tok_low.GetChar(0) == '#')
+        {
+            if (tok_low.Matches(_T("#include")))
+                HandleInclude();
+            else
+                m_Tokens.SkipToEOL();
+        }
     }
     m_pLastParent = old_parent;
 }
@@ -1638,6 +1673,13 @@ void ParserThreadF::HandleBlockData()
         {
             HandleInclude();
         }
+        else if (tok_low.GetChar(0) == '#')
+        {
+            if (tok_low.Matches(_T("#include")))
+                HandleInclude();
+            else
+                m_Tokens.SkipToEOL();
+        }
     }
     m_pLastParent->AddLineEnd(m_Tokens.GetLineNumber());
     m_pLastParent = old_parent;
@@ -1650,11 +1692,25 @@ void ParserThreadF::HandleInclude()
 
     if (token.IsEmpty())
         return; // something wrong
-    else if ((token.StartsWith(_T("\'")) || token.StartsWith(_T("\""))) && (token.EndsWith(_T("\'")) || token.EndsWith(_T("\""))))
+    else if ((token.StartsWith(_T("\'")) || token.StartsWith(_T("\"")) || token.StartsWith(_T("<"))) &&
+             (token.EndsWith(_T("\'")) || token.EndsWith(_T("\""))  || token.EndsWith(_T(">"))))
     {
         token = token.Mid(1,token.Len()-2).Trim().Trim(false);
         DoAddToken(tkInclude, token);
         m_IncludeList.Add(token);
+    }
+    else if (token.IsSameAs(_T("<")))
+    {
+        // Handle #include <filename.fpp>
+        token = m_Tokens.GetTokenSameLine();
+        if (m_Tokens.PeekTokenSameFortranLine().IsSameAs(_T(".")))
+        {
+            wxString point = m_Tokens.GetToken();
+            token.Append(point + m_Tokens.GetTokenSameLine());
+        }
+        DoAddToken(tkInclude, token);
+        m_IncludeList.Add(token);
+        m_Tokens.SkipToEOL();
     }
 }
 
@@ -1762,6 +1818,13 @@ void ParserThreadF::GoThroughBody()
         else if (tok_low.Matches(_T("include")))
         {
             HandleInclude();
+        }
+        else if (tok_low.GetChar(0) == '#')
+        {
+            if (tok_low.Matches(_T("#include")))
+                HandleInclude();
+            else
+                m_Tokens.SkipToEOL();
         }
         else if (tok_low.Matches(_T("procedure")) && m_pLastParent->m_TokenKind == tkInterface)
         {

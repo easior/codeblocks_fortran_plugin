@@ -1166,7 +1166,7 @@ std::vector<FortranProject::CCCallTip> FortranProject::GetCallTips(int pos, int 
     int commas; // how many commas has the user typed so far?
     int commasPos; // how many commas until current position?
     bool isempt;
-    wxArrayString callTipsOneLine;
+    wxArrayString callTips;
     wxArrayInt idxFuncSub;
     TokensArrayFlatClass tokensTmp;
     TokensArrayFlat* result = tokensTmp.GetTokens();
@@ -1180,31 +1180,24 @@ std::vector<FortranProject::CCCallTip> FortranProject::GetCallTips(int pos, int 
     {
         if (result->GetCount() > 0 && result->Item(0)->m_TokenKind == tkProcedure)
         {
-            m_pNativeParser->GetCallTipsForTypeBoundProc(result, callTipsOneLine);
+            m_pNativeParser->GetCallTipsForTypeBoundProc(result, callTips);
             idxFuncSub.Add(1);
         }
         else if (result->GetCount() > 0 && result->Item(0)->m_TokenKind == tkInterface)
-            m_pNativeParser->GetCallTipsForGenericTypeBoundProc(result, callTipsOneLine, idxFuncSub);
+            m_pNativeParser->GetCallTipsForGenericTypeBoundProc(result, callTips, idxFuncSub);
         else if (result->GetCount() > 0 && result->Item(0)->m_TokenKind == tkVariable &&
                  Manager::Get()->GetConfigManager(_T("fortran_project"))->ReadBool(_T("/call_tip_arrays"), true))
         {
             wxString callTip;
             m_pNativeParser->GetCallTipsForVariable(result->Item(0), callTip);
             if (!callTip.IsEmpty())
-                callTipsOneLine.Add(callTip);
+                callTips.Add(callTip);
         }
     }
     else if (!lastName.IsEmpty())
     {
-        m_pNativeParser->GetCallTips(lastName, m_LogOnlyUseAssoc, m_LogOnlyPublicNames, callTipsOneLine, result);
-        m_pKeywordsParser->GetCallTips(lastName, callTipsOneLine, result);
-    }
-    wxArrayString callTips;
-    for (unsigned int i = 0; i < callTipsOneLine.GetCount(); ++i)
-    {
-//        wxString s;
-//        m_pNativeParser->BreakUpInLines(s, callTipsOneLine.Item(i), maxCalltipLineSizeInChars);
-        callTips.Add(callTipsOneLine.Item(i));
+        m_pNativeParser->GetCallTips(lastName, m_LogOnlyUseAssoc, m_LogOnlyPublicNames, callTips, result);
+        m_pKeywordsParser->GetCallTips(lastName, callTips, result);
     }
 
     bool isUnique = true;
@@ -1212,8 +1205,6 @@ std::vector<FortranProject::CCCallTip> FortranProject::GetCallTips(int pos, int 
     for (unsigned int i = 0; i < callTips.GetCount(); ++i)
     {
         bool empOk = true;
-//        if (callTips[i].IsSameAs(_T("()")) && !isempt)
-//            empOk = false;
 
         if (!callTips[i].IsEmpty() && // non-empty
             empOk)
@@ -1281,17 +1272,6 @@ std::vector<FortranProject::CCCallTip> FortranProject::GetCallTips(int pos, int 
 
         if (lastName.IsEmpty())
             return tips;
-
-//        int idxPage = 0;
-//        if (m_IdxCallTipPage.count(lastName) == 1)
-//        {
-//            idxPage = m_IdxCallTipPage[lastName];
-//            if (idxPage+1 > int(callTips.GetCount()))
-//                idxPage = 0;
-//            else if (idxPage < 0)
-//                idxPage = callTips.GetCount() - 1;
-//        }
-//        m_IdxCallTipPage[lastName] = idxPage;
 
         for (size_t i=0; i < callTips.GetCount(); ++i)
         {
@@ -1752,10 +1732,11 @@ wxString FortranProject::GetIncludeFilename(cbStyledTextCtrl* control)
         return wxEmptyString;
     wxString strName;
     int style = control->GetStyleAt(control->GetCurrentPos());
-    if (style == wxSCI_F_STRING1 || style == wxSCI_F_STRING2)
+    if (style == wxSCI_F_STRING1 || style == wxSCI_F_STRING2 || style == wxSCI_F_PREPROCESSOR)
     {
         wxString curLine = control->GetCurLine().Lower();
-        if (!curLine.Trim(false).StartsWith(_T("include")))
+        if (!curLine.Trim(false).StartsWith(_T("include")) &&
+            !curLine.Trim(false).StartsWith(_T("#include")))
             return wxEmptyString;
 
         int pos   = control->GetCurrentPos();
@@ -1764,14 +1745,21 @@ wxString FortranProject::GetIncludeFilename(cbStyledTextCtrl* control)
         wxString strBefore = control->GetTextRange(lineStartPos, pos).Lower().Trim(false);
         int idx1 = strBefore.Find('"', true);
         int idx2 = strBefore.Find('\'', true);
-        if ((idx1 == wxNOT_FOUND && idx2 == wxNOT_FOUND) ||
-            (idx1 != wxNOT_FOUND && idx2 != wxNOT_FOUND))
+        int idx3 = strBefore.Find('<', true);
+        if ((idx1 == wxNOT_FOUND && idx2 == wxNOT_FOUND && idx3 == wxNOT_FOUND) ||
+            (idx1 != wxNOT_FOUND && idx2 != wxNOT_FOUND) ||
+            (idx1 != wxNOT_FOUND && idx3 != wxNOT_FOUND) ||
+            (idx2 != wxNOT_FOUND && idx3 != wxNOT_FOUND))
             return wxEmptyString;
         int idx = (idx1 != wxNOT_FOUND) ? idx1 : idx2;
-        if (strBefore.Mid(0,idx).Trim().Trim(false) != _T("include"))
+        idx = (idx != wxNOT_FOUND) ? idx : idx3;
+        if (strBefore.Mid(0,idx).Trim().Trim(false) != _T("include") &&
+            strBefore.Mid(0,idx).Trim().Trim(false) != _T("#include"))
             return wxEmptyString;
 
         wxChar ch = curLine[idx];
+        if (ch == '<')
+            ch = '>';
         wxString strLast = curLine.Mid(strBefore.size());
         int idxL = strLast.Find(ch);
         if (idxL == wxNOT_FOUND)

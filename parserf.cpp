@@ -2351,42 +2351,21 @@ void ParserF::FindChildrenOfInterface(TokenFlat* token, TokensArrayFlat& result)
             {
                 if (pModChildren->Item(k)->m_Name.IsSameAs(token->m_Name) && pModChildren->Item(k)->m_TokenKind == tkInterface)
                 {
+                    wxArrayString address;
+                    address.Add(pFileChildren->Item(j)->m_Filename);
+                    address.Add(pFileChildren->Item(j)->m_Name);
+                    int tokenKindMask = tkSubroutine | tkFunction;
                     TokensArrayF* pIntChildren = &pModChildren->Item(k)->m_Children;
                     for (size_t l=0; l < pIntChildren->GetCount(); l++)
                     {
-                        if (pIntChildren->Item(l)->m_TokenKind == tkFunction || pIntChildren->Item(l)->m_TokenKind == tkSubroutine)
+                        if (pIntChildren->Item(l)->m_TokenKind & tokenKindMask)
                         {
                             result.Add(new TokenFlat(pIntChildren->Item(l)));
                         }
                         else
                         {
                             wxString name = pIntChildren->Item(l)->m_Name;
-                            for (size_t m=0; m < pModChildren->GetCount(); m++)
-                            {
-                                if ( (pModChildren->Item(m)->m_TokenKind == tkFunction || pModChildren->Item(m)->m_TokenKind == tkSubroutine) &&
-                                      pModChildren->Item(m)->m_Name.IsSameAs(name) )
-                                {
-                                    result.Add(new TokenFlat(pModChildren->Item(m)));
-                                    break;
-                                }
-                                else if (pModChildren->Item(m)->m_TokenKind == tkInterfaceExplicit)
-                                {
-                                    bool found = false;
-                                    TokensArrayF* pIntExplCh = &pModChildren->Item(m)->m_Children;
-                                    for (size_t n=0; n < pIntExplCh->GetCount(); n++)
-                                    {
-                                        if ( (pIntExplCh->Item(n)->m_TokenKind == tkFunction || pIntExplCh->Item(n)->m_TokenKind == tkSubroutine) &&
-                                              pIntExplCh->Item(n)->m_Name.IsSameAs(name) )
-                                        {
-                                            result.Add(new TokenFlat(pIntExplCh->Item(n)));
-                                            found = true;
-                                            break;
-                                        }
-                                    }
-                                    if (found)
-                                        break;
-                                }
-                            }
+                            FindUseAssociatedTokens(true, address, name, false, result, tokenKindMask | tkInterface, false);
                         }
                     }
                     break;

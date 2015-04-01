@@ -437,22 +437,32 @@ int NativeParserF::GetTokenKindImageIdx(TokenF* token)
 int NativeParserF::CountCommas(const wxString& lineText, int start, bool nesting)
 {
     int commas = 0;
-    int nest = 0;
+    int nest   = 0;
+    bool inA  = false;
+    bool inDA = false;
     while (true)
     {
         wxChar c = lineText.GetChar(start);
         start++;
         if (c == '\0')
             break;
-        else if (nesting && (c == '(' || c == '['))
+        else if (nesting && (c == '(' || c == '[') && !inA && !inDA)
             ++nest;
-        else if (nesting && (c == ')' || c == ']'))
+        else if (nesting && (c == ')' || c == ']') && !inA && !inDA)
         {
             --nest;
             if (nest < 0)
                 break;
         }
-        else if (c == ',' && nest == 0)
+        else if (c == '\'' && !inA && !inDA)
+            inA = true;
+        else if (c == '\'' && inA)
+            inA = false;
+        else if (c == '"' && !inA && !inDA)
+            inDA = true;
+        else if (c == '"' && inDA)
+            inDA = false;
+        else if (c == ',' && nest == 0 && !inA && !inDA)
             ++commas;
     }
     return commas;
@@ -492,6 +502,15 @@ void NativeParserF::CollectInformationForCallTip(int& commasAll, int& commasUnti
     CountCommasInEditor(commasAll, commasUntilPos, lastName, isempty, lineText, argsPos);
     if (lastName.IsEmpty())
         return;
+
+    lineText.Trim();
+    wxString lineTextMinus = lineText.Mid(0,lineText.Len()-lastName.Len());
+    wxString beforLast = GetLastName(lineTextMinus);
+    if (beforLast.IsSameAs(_T("subroutine"),false) || beforLast.IsSameAs(_T("function"),false))
+    {
+        lastName = _T("");
+        return; // we don't want calltips during procedure declaration
+    }
 
     isAfterPercent = false;
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
