@@ -374,9 +374,7 @@ bool Tokenizerf::SkipBlock(const wxChar& ch, int maxLines)
 
 bool Tokenizerf::SkipUnwanted()
 {
-	while (CurrentChar() == '#' ||
-           (CurrentChar() == '=' && !m_DetailedParsing) ||
-           //CurrentChar() == '[' ||
+	while ((CurrentChar() == '=' && !m_DetailedParsing) ||
            CurrentChar() == '!' ||
            ((CurrentChar() == 'c' || CurrentChar() == 'C' || CurrentChar() == '*') && m_Column == 1 && m_SourceForm == fsfFixed))
 	{
@@ -392,24 +390,6 @@ bool Tokenizerf::SkipUnwanted()
             if (!SkipWhiteSpace())
                 return false;
 		}
-
-		while (CurrentChar() == '#')
-		{
-			// preprocessor directives
-			// skip the rest for now...
-            SkipToEOL();
-            if (!SkipWhiteSpace())
-                return false;
-		}
-
-//		while (CurrentChar() == '[')
-//		{
-//			// array subscripts
-//			// skip them for now...
-//			SkipBlock('[');
-//			if (!SkipWhiteSpace())
-//				return false;
-//		}
 
 		while (CurrentChar() == '=')
 		{
@@ -625,13 +605,14 @@ wxString Tokenizerf::DoGetToken()
 	int start = m_TokenIndex;
 	wxString m_Str;
 
-	if (isalpha(CurrentChar()) || CurrentChar() == '_' || CurrentChar() == '$')
+	if (isalpha(CurrentChar()) || CurrentChar() == '_' || CurrentChar() == '$' || CurrentChar() == '#')
 	{
 		// keywords, identifiers, etc.
 		while (!IsEOF() &&
 				(isalnum(CurrentChar()) ||
 				CurrentChar() == '_'    ||
-				CurrentChar() == '$'))
+				CurrentChar() == '$'    ||
+				CurrentChar() == '#'))
 			MoveToNextChar();
 		if (IsEOF())
 			return wxEmptyString;

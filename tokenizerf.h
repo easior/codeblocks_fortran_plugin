@@ -55,13 +55,13 @@ class Tokenizerf
 		void SetDetailedParsing(bool detPars);
 		void SetFilename(const wxString& filename);
         void UngetToken();
+		bool SkipToEOL();
 	protected:
 		void BaseInit();
 		wxString DoGetToken();
 		bool ReadFile();
 		bool SkipWhiteSpace();
 		bool SkipToChar(const wxChar& ch, bool toLineEnd = false);
-		bool SkipToEOL();
 		bool SkipBlock(const wxChar& ch, int maxLines = 0);
 		bool SkipUnwanted(); // skips comments, assignments, preprocessor etc.
 		bool IsEOF(){ return m_TokenIndex >= m_BufferLen; }
