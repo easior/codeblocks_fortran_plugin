@@ -15,6 +15,7 @@
 //*)
 
 #include "parserf.h"
+#include "bindtonewtype.h"
 
 enum BindToIn
 {
@@ -36,25 +37,36 @@ class Bindto: public wxDialog
 
 		//(*Declarations(Bindto)
 		wxButton* bt_Defaults;
+		wxCheckBox* cb_genCython;
 		wxButton* bt_Edit;
 		wxRadioButton* rb_ActiveProject;
 		wxPanel* Panel1;
+		wxButton* bt_OutputDir;
 		wxCheckBox* cb_dtorStart;
 		wxTextCtrl* tc_dtorStart;
+		wxPanel* pn_pyOpts;
+		wxCheckBox* cb_pyGenClass;
 		wxCheckBox* cb_ctorEnd;
 		wxButton* bt_Add;
 		wxStaticText* st_globalFilename;
+		wxTextCtrl* tc_OutputDir;
+		wxCheckBox* cb_pyFirstSelf;
+		wxStaticText* StaticText16;
 		wxPanel* Panel2;
 		wxPanel* Panel4;
 		wxListView* lv_Types;
 		wxCheckBox* cb_ctorStart;
+		wxPanel* Panel5;
 		wxTextCtrl* tc_ctorStart;
+		wxStaticText* StaticText7;
 		wxButton* bt_Remove;
 		wxTextCtrl* tc_dtorEnd;
 		wxCheckBox* cb_dtorEnd;
 		wxTextCtrl* tc_globalFilename;
 		wxTextCtrl* tc_bindCName;
 		wxTextCtrl* tc_ctorEnd;
+		wxTextCtrl* tc_pyFunName;
+		wxButton* bt_copy;
 		wxCheckBox* cb_globalToOne;
 		wxRadioButton* rb_CurrentFile;
 		//*)
@@ -65,11 +77,16 @@ class Bindto: public wxDialog
 		static const long ID_BTOACTIVEPROJECT;
 		static const long ID_BTOCURRENTFILE;
 		static const long ID_TEXTCTRL1;
+		static const long ID_STATICTEXT5;
 		static const long ID_CHECKBOX3;
 		static const long ID_TEXTCTRL6;
+		static const long ID_STATICTEXT1;
+		static const long ID_TEXTCTRL7;
+		static const long ID_BUTTON1;
 		static const long ID_PANEL2;
 		static const long ID_LV_TYPES;
 		static const long ID_BUTTON_ADD;
+		static const long ID_BUTTON_COPY;
 		static const long ID_BUTTON_EDIT;
 		static const long ID_BUTTON_REMOVE;
 		static const long ID_BUTTON_DEFAULTS;
@@ -84,6 +101,12 @@ class Bindto: public wxDialog
 		static const long ID_CHECKBOX2;
 		static const long ID_TEXTCTRL3;
 		static const long ID_PANEL4;
+		static const long ID_CHECKBOX6;
+		static const long ID_TEXTCTRL8;
+		static const long ID_CHECKBOX7;
+		static const long ID_CHECKBOX8;
+		static const long ID_PANEL6;
+		static const long ID_PANEL5;
 		static const long ID_NOTEBOOK1;
 		//*)
 
@@ -99,6 +122,9 @@ class Bindto: public wxDialog
 		void OnClick_cbDtorStart(wxCommandEvent& event);
 		void OnClick_cbDtorEnd(wxCommandEvent& event);
 		void Onrb_ActiveProjectSelect(wxCommandEvent& event);
+		void Onbt_OutputDirClick(wxCommandEvent& event);
+		void Oncb_genCythonClick(wxCommandEvent& event);
+		void OnCopy(wxCommandEvent& event);
 		//*)
 
 		enum Language
@@ -106,6 +132,24 @@ class Bindto: public wxDialog
 		    Fortran,
 		    C,
 		    Python,
+		};
+
+		struct TypeBind
+		{
+		    wxString fType;
+		    wxString bType;
+		    wxString cType;
+		    wxString cDim;
+		};
+
+		struct TypePyx
+		{
+		    wxString declarPyxFirst;
+		    wxString callCSecond;
+		    wxString intent;
+		    wxString fDrvTypeName;
+		    wxString initStr;
+		    bool hide;
 		};
 
 		ParserF* m_pParser;
@@ -121,6 +165,9 @@ class Bindto: public wxDialog
         wxString m_CtorEndsWith;
         wxString m_DtorStartsWith;
         wxString m_DtorEndsWith;
+        wxString m_InitialOutputDirFile;
+        wxString m_InitialOutputDirProj;
+        wxString m_OutputDir;
 
         bool m_UseOneGlobalFile;
         wxString m_GlobProceduresFile;
@@ -151,12 +198,16 @@ class Bindto: public wxDialog
         wxString m_CurFile;
         bool m_InFortranModule;
 
+        bool m_PyGenCython;
+        StrSet m_PyInclude;
         int m_PyIndent;
-        wxString m_BindPyName;
+        wxString m_PyFuncName;
         bool m_PyCreateClass;
         bool m_PyFirstArgAsSelf;
         bool m_HasPyClassConstructor;
+        StrMap m_C2NumpyTypes;
 
+        void FillC2NumpyTypesMap();
         void FillTypeList();
         void LoadInitialValues();
         void FillTypeMapDefault();
@@ -170,9 +221,10 @@ class Bindto: public wxDialog
         wxString CheckOverwriteFilename(wxFileName &fname);
         void BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& txtCythonFirst, wxString& txtCythonSecond,
                            TokenF* token, const wxString& moduleName, bool isGlobal, wxString callName=wxEmptyString);
-        wxArrayString GetBindType(TokenF* token, int& nDimVarAdd);
-        wxArrayString GetBindType(const wxString& declar, int& nDimVarAdd);
+        TypeBind GetBindType(TokenF* token, int& nDimVarAdd);
+        TypeBind GetBindType(const wxString& declar, int& nDimVarAdd);
         wxString GetToken(const wxString& txt, int iPos);
+        wxArrayString GetTypeAndKind(wxString decl);
         wxString GetFunctionDeclaration(TokenF* token);
         wxString GetCDims(wxString vdim);
         wxString SplitLines(const wxString& txt, Language lang);
@@ -184,7 +236,8 @@ class Bindto: public wxDialog
         wxString GetHelperModule(bool useGlobal = false);
         void PrepareAssumedShapeVariables(wxString& txtBindSecond, const wxArrayString& argArr, const wxArrayString& dimVarNames,
                                           wxArrayString& additionalDeclar, wxArrayString& addVarNames, wxArrayString& addVarNamesC,
-                                          const wxArrayString& varNamesOfDim, wxArrayString& additionalDeclarPy, wxArrayString& addVarNamesPy);
+                                          const wxArrayString& varNamesOfDim, const StrSet& argHideSetPy, wxArrayString& additionalDeclarPy,
+                                          wxArrayString& addVarNamesPy, wxArrayString& addArgNamesPy);
         void AddDimVariables(const wxArrayString& argArr, wxArrayString& dimVarNames, int nDimVarAdd, wxString varFirstPart, const wxString& argName, wxArrayString& varNamesOfDim);
         void HideAssumedShape(const wxString& vdim, wxString& vdimHid, int& nAssumedDim);
         void AddDimVariablesFromDoc(wxArrayString& dimVarNames, int& nDimVarAdd, const wxString& docString, const wxString& argName, wxArrayString& varNamesOfDim);
@@ -195,10 +248,14 @@ class Bindto: public wxDialog
         wxString GetConstructorName(const wxString& type);
         bool IsConstructor(TokenF* token);
         bool IsDestructor(TokenF* token);
-        //int GetNumberOfSpacesBefore(const wxString& lines, int idx);
         wxString GetPyName(const wxString& procName, const wxString& moduleName);
-        wxArrayString GetBindTypePy(const wxArrayString& tya);
+        TypePyx GetBindTypePy(const TypeBind& tya);
         wxString CreateCythonFilename(const wxString& filename);
+        void GetInitialOutputDir(wxString& initialOutputDirFile, wxString& initialOutputDirProj);
+        bool MakeOutputDir();
+        bool VlidatePyFuncName();
+        void ShowNewTypeDlg(BindtoNewType& addNewType);
+        void PrepateTypes(wxString& ft, wxString& bt, wxString& ct);
 
 		DECLARE_EVENT_TABLE()
 };

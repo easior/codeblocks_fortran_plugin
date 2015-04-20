@@ -9,21 +9,27 @@
 #include <cbstyledtextctrl.h>
 #include <configmanager.h>
 #include <projectmanager.h>
+#include <logmanager.h>
 #include <cbproject.h>
 #include <wx/regex.h>
 #include <wx/tokenzr.h>
 #include <wx/textdlg.h>
-#include "bindtonewtype.h"
+#include <wx/dirdlg.h>
 
 //(*IdInit(Bindto)
 const long Bindto::ID_BTOACTIVEPROJECT = wxNewId();
 const long Bindto::ID_BTOCURRENTFILE = wxNewId();
 const long Bindto::ID_TEXTCTRL1 = wxNewId();
+const long Bindto::ID_STATICTEXT5 = wxNewId();
 const long Bindto::ID_CHECKBOX3 = wxNewId();
 const long Bindto::ID_TEXTCTRL6 = wxNewId();
+const long Bindto::ID_STATICTEXT1 = wxNewId();
+const long Bindto::ID_TEXTCTRL7 = wxNewId();
+const long Bindto::ID_BUTTON1 = wxNewId();
 const long Bindto::ID_PANEL2 = wxNewId();
 const long Bindto::ID_LV_TYPES = wxNewId();
 const long Bindto::ID_BUTTON_ADD = wxNewId();
+const long Bindto::ID_BUTTON_COPY = wxNewId();
 const long Bindto::ID_BUTTON_EDIT = wxNewId();
 const long Bindto::ID_BUTTON_REMOVE = wxNewId();
 const long Bindto::ID_BUTTON_DEFAULTS = wxNewId();
@@ -38,6 +44,12 @@ const long Bindto::ID_TEXTCTRL2 = wxNewId();
 const long Bindto::ID_CHECKBOX2 = wxNewId();
 const long Bindto::ID_TEXTCTRL3 = wxNewId();
 const long Bindto::ID_PANEL4 = wxNewId();
+const long Bindto::ID_CHECKBOX6 = wxNewId();
+const long Bindto::ID_TEXTCTRL8 = wxNewId();
+const long Bindto::ID_CHECKBOX7 = wxNewId();
+const long Bindto::ID_CHECKBOX8 = wxNewId();
+const long Bindto::ID_PANEL6 = wxNewId();
+const long Bindto::ID_PANEL5 = wxNewId();
 const long Bindto::ID_NOTEBOOK1 = wxNewId();
 //*)
 
@@ -58,6 +70,9 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
 	wxBoxSizer* BoxSizer15;
 	wxFlexGridSizer* FlexGridSizer1;
 	wxFlexGridSizer* FlexGridSizer2;
+	wxStaticText* StaticText13;
+	wxStaticText* StaticText14;
+	wxStaticText* StaticText15;
 	wxBoxSizer* BoxSizer3;
 	wxBoxSizer* BoxSizer16;
 	wxBoxSizer* BoxSizer10;
@@ -68,24 +83,25 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
 	wxBoxSizer* BoxSizer2;
 	wxStaticText* StaticText1;
 	wxStaticText* StaticText10;
+	wxBoxSizer* BoxSizer17;
 	wxBoxSizer* BoxSizer9;
+	wxBoxSizer* BoxSizer18;
 	wxStaticText* StaticText3;
-	wxStaticText* StaticText8;
+	wxBoxSizer* BoxSizer19;
 	wxStaticText* StaticText12;
 	wxBoxSizer* BoxSizer4;
 	wxPanel* Panel3;
 	wxBoxSizer* BoxSizer8;
+	wxBoxSizer* BoxSizer20;
 	wxStaticText* StaticText4;
 	wxBoxSizer* BoxSizer1;
 	wxStaticText* StaticText5;
 	wxStaticText* StaticText2;
-	wxStaticText* StaticText6;
 	wxBoxSizer* BoxSizer12;
 	wxBoxSizer* BoxSizer14;
 	wxStaticText* StaticText9;
 	wxBoxSizer* BoxSizer6;
 	wxStdDialogButtonSizer* StdDialogButtonSizer1;
-	wxStaticText* StaticText11;
 	wxBoxSizer* BoxSizer5;
 
 	Create(parent, wxID_ANY, _("Bind To"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER, _T("wxID_ANY"));
@@ -112,12 +128,8 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
 	tc_bindCName->SetToolTip(_("Write how the names called from C code will be constructed.\nVariables \"$procname$\", \"$modulename$\" and \"$modname$\" will be changed procedure, module and truncated module names corespondingly."));
 	BoxSizer8->Add(tc_bindCName, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	BoxSizer7->Add(BoxSizer8, 0, wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
-	StaticText6 = new wxStaticText(Panel2, wxID_ANY, _(" Note: $procname$ is changed to the original name of procedure;"), wxDefaultPosition, wxDefaultSize, 0, _T("wxID_ANY"));
-	BoxSizer7->Add(StaticText6, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 0);
-	StaticText11 = new wxStaticText(Panel2, wxID_ANY, _("         $modulename$ is changed to the name of module;"), wxDefaultPosition, wxDefaultSize, 0, _T("wxID_ANY"));
-	BoxSizer7->Add(StaticText11, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 0);
-	StaticText8 = new wxStaticText(Panel2, wxID_ANY, _("         $modname$ is changed to the truncated name of module."), wxDefaultPosition, wxDefaultSize, 0, _T("wxID_ANY"));
-	BoxSizer7->Add(StaticText8, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 0);
+	StaticText16 = new wxStaticText(Panel2, ID_STATICTEXT5, _("Note: $procname$ is changed to the original name of procedure;\n         $modulename$ is changed to the name of module;\n         $modname$ is changed to the truncated name of module."), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT5"));
+	BoxSizer7->Add(StaticText16, 0, wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
 	BoxSizer15 = new wxBoxSizer(wxVERTICAL);
 	cb_globalToOne = new wxCheckBox(Panel2, ID_CHECKBOX3, _("Add wrapper code for global procedures into one file"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX3"));
 	cb_globalToOne->SetValue(false);
@@ -130,6 +142,14 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
 	BoxSizer16->Add(tc_globalFilename, 1, wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	BoxSizer15->Add(BoxSizer16, 1, wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
 	BoxSizer7->Add(BoxSizer15, 0, wxTOP|wxBOTTOM|wxALIGN_LEFT|wxALIGN_TOP, 5);
+	BoxSizer17 = new wxBoxSizer(wxHORIZONTAL);
+	StaticText7 = new wxStaticText(Panel2, ID_STATICTEXT1, _("Output dir:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT1"));
+	BoxSizer17->Add(StaticText7, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	tc_OutputDir = new wxTextCtrl(Panel2, ID_TEXTCTRL7, _("Text"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_TEXTCTRL7"));
+	BoxSizer17->Add(tc_OutputDir, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	bt_OutputDir = new wxButton(Panel2, ID_BUTTON1, _("..."), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON1"));
+	BoxSizer17->Add(bt_OutputDir, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	BoxSizer7->Add(BoxSizer17, 0, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 0);
 	Panel2->SetSizer(BoxSizer7);
 	BoxSizer7->Fit(Panel2);
 	BoxSizer7->SetSizeHints(Panel2);
@@ -144,6 +164,9 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
 	bt_Add = new wxButton(Panel1, ID_BUTTON_ADD, _("Add"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON_ADD"));
 	bt_Add->SetToolTip(_("Add a new type"));
 	BoxSizer5->Add(bt_Add, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	bt_copy = new wxButton(Panel1, ID_BUTTON_COPY, _("Copy"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON_COPY"));
+	bt_copy->SetToolTip(_("Copy selected type to a new one"));
+	BoxSizer5->Add(bt_copy, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	bt_Edit = new wxButton(Panel1, ID_BUTTON_EDIT, _("Edit"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON_EDIT"));
 	bt_Edit->SetToolTip(_("Edit selected type"));
 	BoxSizer5->Add(bt_Edit, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
@@ -211,10 +234,41 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
 	Panel4->SetSizer(BoxSizer9);
 	BoxSizer9->Fit(Panel4);
 	BoxSizer9->SetSizeHints(Panel4);
+	Panel5 = new wxPanel(nb_settings, ID_PANEL5, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL5"));
+	BoxSizer18 = new wxBoxSizer(wxVERTICAL);
+	StaticText13 = new wxStaticText(Panel5, wxID_ANY, _("This tool can generate Cython code which wraps Fortran. Generated *.pyx file\n can later be compiled into an extention module for the Python language."), wxDefaultPosition, wxDefaultSize, 0, _T("wxID_ANY"));
+	BoxSizer18->Add(StaticText13, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	cb_genCython = new wxCheckBox(Panel5, ID_CHECKBOX6, _("Generate Cython *.pyx file"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX6"));
+	cb_genCython->SetValue(false);
+	BoxSizer18->Add(cb_genCython, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	pn_pyOpts = new wxPanel(Panel5, ID_PANEL6, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL6"));
+	BoxSizer20 = new wxBoxSizer(wxVERTICAL);
+	BoxSizer19 = new wxBoxSizer(wxHORIZONTAL);
+	StaticText14 = new wxStaticText(pn_pyOpts, wxID_ANY, _("Python function names:"), wxDefaultPosition, wxDefaultSize, 0, _T("wxID_ANY"));
+	BoxSizer19->Add(StaticText14, 0, wxTOP|wxBOTTOM|wxRIGHT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	tc_pyFunName = new wxTextCtrl(pn_pyOpts, ID_TEXTCTRL8, _("Text"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_TEXTCTRL8"));
+	BoxSizer19->Add(tc_pyFunName, 1, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	BoxSizer20->Add(BoxSizer19, 0, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	StaticText15 = new wxStaticText(pn_pyOpts, wxID_ANY, _("Note: $procname$ is changed to the original name of procedure;\n         $modulename$ is changed to the name of module;\n         $modname$ is changed to the truncated name of module."), wxDefaultPosition, wxDefaultSize, 0, _T("wxID_ANY"));
+	BoxSizer20->Add(StaticText15, 0, wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	cb_pyGenClass = new wxCheckBox(pn_pyOpts, ID_CHECKBOX7, _("Generate Python class from Fortran module"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX7"));
+	cb_pyGenClass->SetValue(false);
+	BoxSizer20->Add(cb_pyGenClass, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	cb_pyFirstSelf = new wxCheckBox(pn_pyOpts, ID_CHECKBOX8, _("Use first argument of the derived type as \'self\' in Python"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX8"));
+	cb_pyFirstSelf->SetValue(false);
+	BoxSizer20->Add(cb_pyFirstSelf, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	pn_pyOpts->SetSizer(BoxSizer20);
+	BoxSizer20->Fit(pn_pyOpts);
+	BoxSizer20->SetSizeHints(pn_pyOpts);
+	BoxSizer18->Add(pn_pyOpts, 1, wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	Panel5->SetSizer(BoxSizer18);
+	BoxSizer18->Fit(Panel5);
+	BoxSizer18->SetSizeHints(Panel5);
 	nb_settings->AddPage(Panel2, _("General"), false);
 	nb_settings->AddPage(Panel1, _("Types"), false);
 	nb_settings->AddPage(Panel3, _("Constructor"), false);
 	nb_settings->AddPage(Panel4, _("Destructor"), false);
+	nb_settings->AddPage(Panel5, _("Python"), false);
 	BoxSizer6->Add(nb_settings, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	BoxSizer1->Add(BoxSizer6, 1, wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	StdDialogButtonSizer1 = new wxStdDialogButtonSizer();
@@ -228,7 +282,9 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
 
 	Connect(ID_BTOACTIVEPROJECT,wxEVT_COMMAND_RADIOBUTTON_SELECTED,(wxObjectEventFunction)&Bindto::Onrb_ActiveProjectSelect);
 	Connect(ID_BTOCURRENTFILE,wxEVT_COMMAND_RADIOBUTTON_SELECTED,(wxObjectEventFunction)&Bindto::Onrb_ActiveProjectSelect);
+	Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Bindto::Onbt_OutputDirClick);
 	Connect(ID_BUTTON_ADD,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Bindto::OnAdd);
+	Connect(ID_BUTTON_COPY,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Bindto::OnCopy);
 	Connect(ID_BUTTON_EDIT,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Bindto::OnEdit);
 	Connect(ID_BUTTON_REMOVE,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Bindto::OnRemove);
 	Connect(ID_BUTTON_DEFAULTS,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Bindto::OnDefaults);
@@ -236,6 +292,7 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
 	Connect(ID_CHECKBOX5,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&Bindto::OnClick_cbCtorEnd);
 	Connect(ID_CHECKBOX1,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&Bindto::OnClick_cbDtorStart);
 	Connect(ID_CHECKBOX2,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&Bindto::OnClick_cbDtorEnd);
+	Connect(ID_CHECKBOX6,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&Bindto::Oncb_genCythonClick);
 	//*)
 
     lv_Types->InsertColumn(0,_T("Fortran"));
@@ -288,6 +345,12 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
     tc_globalFilename->Enable(enab);
     st_globalFilename->Enable(enab);
 
+    GetInitialOutputDir(m_InitialOutputDirFile, m_InitialOutputDirProj);
+    if (rb_CurrentFile->GetValue())
+        tc_OutputDir->SetValue(m_InitialOutputDirFile);
+    else
+        tc_OutputDir->SetValue(m_InitialOutputDirProj);
+
     if (m_CtorEndsWith.IsEmpty())
     {
         cb_ctorEnd->SetValue(false);
@@ -326,6 +389,14 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
         tc_dtorEnd->SetValue(m_DtorEndsWith);
         tc_dtorEnd->Enable(true);
     }
+
+    cb_genCython->SetValue(m_PyGenCython);
+    pn_pyOpts->Enable(m_PyGenCython);
+    tc_pyFunName->SetValue(m_PyFuncName);
+    cb_pyGenClass->SetValue(m_PyCreateClass);
+    cb_pyFirstSelf->SetValue(m_PyFirstArgAsSelf);
+
+    FillC2NumpyTypesMap();
 }
 
 Bindto::~Bindto()
@@ -347,6 +418,13 @@ void Bindto::FillTypeList()
         lv_Types->SetItem(idx, 2, it->second[1]);
         idx++;
     }
+}
+
+void Bindto::FillC2NumpyTypesMap()
+{
+    m_C2NumpyTypes[_T("int")] = _T("intc");
+    m_C2NumpyTypes[_T("float")] = _T("float32");
+    m_C2NumpyTypes[_T("double")] = _T("float64");
 }
 
 void Bindto::LoadInitialValues()
@@ -414,6 +492,18 @@ void Bindto::FillTypeMapDefault()
     fTypes.Add(_T("complex"));
     bTypes.Add(_T("complex(c_float_complex)"));
     cTypes.Add(_T("float complex"));
+
+    fTypes.Add(_T("complex*8"));
+    bTypes.Add(_T("complex(c_float_complex)"));
+    cTypes.Add(_T("float complex"));
+
+    fTypes.Add(_T("complex*16"));
+    bTypes.Add(_T("complex(c_double_complex)"));
+    cTypes.Add(_T("double complex"));
+
+    fTypes.Add(_T("complex*32"));
+    bTypes.Add(_T("complex(c_long_double_complex)"));
+    cTypes.Add(_T("long double complex"));
 
     fTypes.Add(_T("complex(4)"));
     bTypes.Add(_T("complex(c_float_complex)"));
@@ -486,8 +576,10 @@ void Bindto::LoadBindToConfig()
     m_DtorStartsWith = cfg->Read(_T("/bind_to/dtor_start"), wxEmptyString);
     m_DtorEndsWith = cfg->Read(_T("/bind_to/dtor_end"), wxEmptyString);
 
+    m_PyGenCython = cfg->ReadBool(_T("/bind_to/python_generate"), false);
     m_PyCreateClass = cfg->ReadBool(_T("/bind_to/python_class"), false);
     m_PyFirstArgAsSelf = cfg->ReadBool(_T("/bind_to/python_firstself"), true);
+    m_PyFuncName = cfg->Read(_T("/bind_to/python_function_name"), PROCNAME_KEY+_T("_f"));
 }
 
 void Bindto::SaveBindToConfig()
@@ -526,8 +618,10 @@ void Bindto::SaveBindToConfig()
     cfg->Write(_T("/bind_to/dtor_start"), m_DtorStartsWith);
     cfg->Write(_T("/bind_to/dtor_end"), m_DtorEndsWith);
 
+    cfg->Write(_T("/bind_to/python_generate"), m_PyGenCython);
     cfg->Write(_T("/bind_to/python_class"), m_PyCreateClass);
     cfg->Write(_T("/bind_to/python_firstself"), m_PyFirstArgAsSelf);
+    cfg->Write(_T("/bind_to/python_function_name"), m_PyFuncName);
 }
 
 void Bindto::OnOK(wxCommandEvent& event)
@@ -538,13 +632,10 @@ void Bindto::OnOK(wxCommandEvent& event)
     else
         btin = bindToFile;
 
-    if (tc_bindCName->GetValue().Trim().IsEmpty())
+    m_BindCName = tc_bindCName->GetValue();
+    m_BindCName.Replace(_T(" "), _T(""));
+    if (m_BindCName.IsEmpty())
         m_BindCName = PROCNAME_KEY;
-    else
-    {
-        m_BindCName = tc_bindCName->GetValue();
-        m_BindCName.Replace(_T(" "), _T(""));
-    }
 
     m_OneGProcFile = cb_globalToOne->GetValue();
     m_OneGProcFileName = tc_globalFilename->GetValue();
@@ -556,6 +647,14 @@ void Bindto::OnOK(wxCommandEvent& event)
         m_UseOneGlobalFile = true;
     else
         m_UseOneGlobalFile = false;
+
+    m_OutputDir = tc_OutputDir->GetValue().Trim(true).Trim(false);
+    if(!MakeOutputDir())
+    {
+        wxString msg = _("Output directory cannot be created.\nCorrect \"Output dir\" text field.");
+        cbMessageBox( msg, _("Error"), wxICON_ERROR);
+        return;
+    }
 
     if (cb_ctorStart->GetValue())
         m_CtorStartsWith = tc_ctorStart->GetValue();
@@ -580,6 +679,14 @@ void Bindto::OnOK(wxCommandEvent& event)
     else
         m_DtorEndsWith = wxEmptyString;
     m_DtorEndsWith.Replace(_T(" "), _T(""));
+
+    m_PyGenCython = cb_genCython->GetValue();
+    m_PyFuncName = tc_pyFunName->GetValue();
+    m_PyFuncName.Replace(_T(" "),_T(""));
+    if (m_PyGenCython && !VlidatePyFuncName())
+        return;
+    m_PyCreateClass = cb_pyGenClass->GetValue();
+    m_PyFirstArgAsSelf = cb_pyFirstSelf->GetValue();
 
     SaveBindToConfig();
     MakeBindTo(btin);
@@ -637,6 +744,7 @@ void Bindto::MakeBindTo(BindToIn btin)
         if (m_UseOneGlobalFile && !m_GlobProceduresFile.IsEmpty())
         {
             wxFileName fname(m_OneGProcFileName);
+            fname.SetPath(m_OutputDir);
 
             while (fname.FileExists())
             {
@@ -789,6 +897,7 @@ void Bindto::FileBindTo(const wxString& filename)
     wxString txtCythonFirst;
     wxString txtCythonGP;
     wxString txtCythonMod;
+    m_PyInclude.clear();
 
     TokensArrayF* fchen = &fileToken->m_Children;
     for (size_t i=0; i<fchen->GetCount(); i++)
@@ -943,9 +1052,13 @@ void Bindto::FileBindTo(const wxString& filename)
     if (hname.IsEmpty())
         return;
 
-    wxString pyname = CreateCythonFilename(filename);
-    if (pyname.IsEmpty())
-        return;
+    wxString pyname;
+    if (m_PyGenCython)
+    {
+        pyname = CreateCythonFilename(filename);
+        if (pyname.IsEmpty())
+            return;
+    }
 
     if (m_UseOneGlobalFile)
     {
@@ -1007,9 +1120,7 @@ void Bindto::FileBindTo(const wxString& filename)
         {
             StrSet::iterator it;
             for (it=m_CInclude.begin(); it != m_CInclude.end(); ++it)
-            {
                 hstr1 << *it << _T("\n");
-            }
         }
         wxString hstr2 = _T("\n#endif");
 
@@ -1019,14 +1130,25 @@ void Bindto::FileBindTo(const wxString& filename)
 
         wxString txtCythonHead;
         txtCythonHead << _T("#!python\n#cython: boundscheck=False, wraparound=False\n");
-        txtCythonHead << _T("import numpy as np\ncimport numpy as np\n\n");
+        txtCythonHead << _T("import numpy as np\ncimport numpy as np\n");
+        if (!m_PyInclude.empty())
+        {
+            StrSet::iterator it;
+            for (it=m_PyInclude.begin(); it != m_PyInclude.end(); ++it)
+                txtCythonHead << *it << _T("\n");
+        }
+        txtCythonHead << _T("\n");
+
         txtCythonHead << _T("cdef extern from \"") << hfname.GetFullName() << _T("\":\n");
-        wxFile pyxf(pyname, wxFile::write);
-        cbWrite(pyxf, txtCythonHead + txtCythonFirst + SplitLines(txtCythonGP,Python) + SplitLines(txtCythonMod,Python) +
-                GetEOLStr(), wxFONTENCODING_UTF8);
-        wxFileName pyfn(pyname);
         wxString pyFiles;
-        pyFiles << _T(", ") << pyfn.GetFullName();
+        if (m_PyGenCython)
+        {
+            wxFile pyxf(pyname, wxFile::write);
+            cbWrite(pyxf, txtCythonHead + txtCythonFirst + SplitLines(txtCythonGP,Python) + SplitLines(txtCythonMod,Python) +
+                    GetEOLStr(), wxFONTENCODING_UTF8);
+            wxFileName pyfn(pyname);
+            pyFiles << _T(", ") << pyfn.GetFullName();
+        }
 
         wxFileName bfn(bfname);
         m_CreatedMsg.Add(_("Files ") + bfn.GetFullName() + _T(", ") + hfname.GetFullName() + pyFiles + _(" were created in ")
@@ -1056,6 +1178,7 @@ wxString Bindto::GetIS(int nint)
 wxString Bindto::CreateBindFilename(const wxString& filename, bool header)
 {
     wxFileName fname(filename);
+    fname.SetPath(m_OutputDir);
     if (header)
         fname.SetExt(_T("h"));
     else
@@ -1152,6 +1275,8 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
     wxString txtCythonSecond;
     wxString txtCythonSecond2;
     wxString txtCythonSecond3;
+    wxArrayString additionalDeclarPy;
+    StrSet argHideSetPy;
     wxArrayString pyLines;
     bool nowIsPyConstructor = false;
     bool noArgPyConstructor = false;
@@ -1167,9 +1292,7 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
     wxArrayString argArr;
     wxStringTokenizer tkz(token->m_Args.Lower(), _T("(),[] \t\r\n"), wxTOKEN_STRTOK );
     while ( tkz.HasMoreTokens() )
-    {
         argArr.Add(tkz.GetNextToken());
-    }
 
     txtBindFirst << _T("(");
     for (size_t i=0; i<argArr.GetCount(); i++)
@@ -1187,13 +1310,13 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
         wxString funT = GetFunctionDeclaration(token);
         m_pTokenCurrent = token;
         int itmp;
-        wxArrayString tya = GetBindType(funT, itmp);
-        funTypeDec = tya[0];
-        if (tya[3].IsEmpty())
+        TypeBind tys = GetBindType(funT, itmp);
+        funTypeDec = tys.fType;
+        if (tys.cDim.IsEmpty())
         {
             funResVar = procName;
-            txtBindSecond << GetIS() << tya[1] << _T(" :: ") << funResVar << _T("\n");
-            txtHeadersThis << tya[2] << _T(" ") << cName << _T("(");
+            txtBindSecond << GetIS() << tys.bType << _T(" :: ") << funResVar << _T("\n");
+            txtHeadersThis << tys.cType << _T(" ") << cName << _T("(");
         }
         else
         {
@@ -1201,10 +1324,10 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
             bindKindSubroutine = true;
             txtBindFirst.Replace(_T("function"), _T("subroutine"), false);
             funResVar = token->m_Name + _T("_res");
-            txtBindSecond << GetIS() << tya[1] << _T(", intent(out) :: ") << funResVar << _T("\n");
+            txtBindSecond << GetIS() << tys.bType << _T(", intent(out) :: ") << funResVar << _T("\n");
             addFunVariable << _T(", ") + funResVar;
             txtHeadersThis << _T("void ") << cName << _T("(");
-            cFunResVar = tya[2] + _T(" ") + funResVar + tya[3];
+            cFunResVar = tys.cType + _T(" ") + funResVar + tys.cDim;
         }
         funInterface.Add(funTypeDec + _T(" :: ") + token->m_DisplayName);
         if (funTypeDec.StartsWith(_T("character")))
@@ -1213,7 +1336,7 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
             additionalCalls2.Add(_T("call string_copy_f_c(") + funResVar + _T("_f,") + funResVar + _T(")"));
             m_WriteStrFtoC = true;
         }
-        else if (!tya[0].StartsWith(_T("type(c_ptr)")) && tya[1].StartsWith(_T("type(c_ptr)")))
+        else if (!tys.fType.StartsWith(_T("type(c_ptr)")) && tys.bType.StartsWith(_T("type(c_ptr)")))
         {
             wxString fName = funResVar + _T("_fp");
             additionalDeclar.Add(funTypeDec + _T(", pointer :: ") + fName);
@@ -1221,7 +1344,7 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
             additionalCalls2.Add(funResVar + _T(" = c_loc(") + fName + _T(")"));
             funResVar = fName;
         }
-        else if (tya[0].StartsWith(_T("logical")) && tya[1].StartsWith(_T("integer")))
+        else if (tys.fType.StartsWith(_T("logical")) && tys.bType.StartsWith(_T("integer")))
         {
             additionalDeclar.Add(funTypeDec + _T(" :: ") + funResVar + _T("_f"));
             additionalCalls2.Add(funResVar + _T(" = log_to_int(") + funResVar + _T("_f)"));
@@ -1230,23 +1353,23 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
         }
 
         wxString pyVarName = token->m_Name + _T("_res");
-        wxArrayString tyaPy = GetBindTypePy(tya);
-        if (tyaPy[4].IsEmpty())
+        TypePyx tyaPy = GetBindTypePy(tys);
+        if (tyaPy.fDrvTypeName.IsEmpty())
         {
-            wxString pyLin1 = _T("cdef ") + tyaPy[0] + _T(" ") + pyVarName + _T(" = ") + cName + _T("(");
+            wxString pyLin1 = _T("cdef ") + tyaPy.declarPyxFirst + _T(" ") + pyVarName + _T(" = ") + cName + _T("(");
             pyLines.Add(pyLin1);
         }
-        else if (m_InFortranModule && m_PyCreateClass && !m_HasPyClassConstructor && IsConstructor(token) && m_DefinedTypes.count(tyaPy[4]) == 1)
+        else if (m_InFortranModule && m_PyCreateClass && !m_HasPyClassConstructor && IsConstructor(token) && m_DefinedTypes.count(tyaPy.fDrvTypeName) == 1)
         {
             nowIsPyConstructor = true;
             m_HasPyClassConstructor = true;
-            constrTypeName = tyaPy[4];
+            constrTypeName = tyaPy.fDrvTypeName;
             if (argArr.GetCount() == 0)
             {
                 noArgPyConstructor = true;
                 m_NoArgConstructors.insert(funTypeDec);
             }
-            wxString pyLin1 = _T("self._") + tyaPy[4] + _T("_cp = ") + cName + _T("(");
+            wxString pyLin1 = _T("self._") + tyaPy.fDrvTypeName + _T("_cp = ") + cName + _T("(");
             pyLines.Add(pyLin1);
             pyVarName = _T("");
         }
@@ -1257,19 +1380,19 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
             m_pParser->GetAddress(token, address);
             TokensArrayFlatClass tokensTmp;
             TokensArrayFlat* resultTmp = tokensTmp.GetTokens();
-            m_pParser->FindUseAssociatedTokens(true, address, tyaPy[4], false, *resultTmp, tkType, false);
+            m_pParser->FindUseAssociatedTokens(true, address, tyaPy.fDrvTypeName, false, *resultTmp, tkType, false);
             if (resultTmp->size() > 0 && resultTmp->Item(0)->m_ParentTokenKind == tkModule)
             {
                 pyClassName = resultTmp->Item(0)->m_ParentName;
             }
             wxString pyLin1 = _T("cdef ") + pyClassName + _T(" ") + pyVarName + _T(" = ") + pyClassName + _T("()\n");
             pyLines.Add(pyLin1);
-            pyLin1 = pyVarName + _T(".") + tyaPy[4] + _T("_cp_del_py()\n");
+            pyLin1 = pyVarName + _T(".") + tyaPy.fDrvTypeName + _T("_cp_del_py()\n");
             pyLines.Add(pyLin1);
-            pyLin1 = pyVarName + _T("._") + tyaPy[4] + _T("_cp") + _T(" = ") + cName + _T("(");
+            pyLin1 = pyVarName + _T("._") + tyaPy.fDrvTypeName + _T("_cp") + _T(" = ") + cName + _T("(");
             pyLines.Add(pyLin1);
 
-            if (IsConstructor(token) && m_DefinedTypes.count(tyaPy[4]) == 1 && argArr.GetCount() == 0)
+            if (IsConstructor(token) && m_DefinedTypes.count(tyaPy.fDrvTypeName) == 1 && argArr.GetCount() == 0)
                 m_NoArgConstructors.insert(funTypeDec);
         }
         txtCythonSecond3 = pyVarName;
@@ -1346,15 +1469,15 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
         {
             m_pTokenCurrent = argToken;
             int nDimVarAdd;
-            wxArrayString tya = GetBindType(argToken, nDimVarAdd);
+            TypeBind tys = GetBindType(argToken, nDimVarAdd);
             if (nDimVarAdd > 0)
                 AddDimVariablesFromDoc(dimVarNames, nDimVarAdd, argToken->m_DocString, argToken->m_Name, varNamesOfDim);
             if (nDimVarAdd > 0)
                 AddDimVariables(argArr, dimVarNames, nDimVarAdd, _T("m"), argToken->m_Name, varNamesOfDim);
 
-            if (!tya[0].StartsWith(_T("type(c_ptr)")) && tya[1].StartsWith(_T("type(c_ptr)")))
+            if (!tys.fType.StartsWith(_T("type(c_ptr)")) && tys.bType.StartsWith(_T("type(c_ptr)")))
             {
-                wxString fDec = tya[0];
+                wxString fDec = tys.fType;
                 if (fDec.StartsWith(_T("class(")))
                     fDec.Replace(_T("class("), _T("type("), false);
                 fDec.Replace(_T(", intent(in)"),_T(""));
@@ -1409,13 +1532,13 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
                 additionalDeclar.Add(fDec + _T(", pointer :: ") + bvName);
                 changedNamesMap[argToken->m_Name] = bvName;
             }
-            else if (tya[0].StartsWith(_T("character")))
+            else if (tys.fType.StartsWith(_T("character")))
             {
                 //character(len=:), allocatable :: fname_f
 
-                if (tya[0].Find(_T("len=*")) != wxNOT_FOUND)
+                if (tys.fType.Find(_T("len=*")) != wxNOT_FOUND)
                 {
-                    wxString fDec = tya[0];
+                    wxString fDec = tys.fType;
                     fDec.Replace(_T(", intent(in)"),_T(""));
                     fDec.Replace(_T(", intent(out)"),_T(""));
                     fDec.Replace(_T(", intent(inout)"),_T(""));
@@ -1432,22 +1555,22 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
                     m_WriteStrLen = true;
                 }
                 else
-                    additionalDeclar.Add(tya[0] + _T(" :: ") + argToken->m_Name + _T("_f") + argToken->m_Args.Lower());
-                if (tya[0].Find(_T("intent(out)")) == wxNOT_FOUND)
+                    additionalDeclar.Add(tys.fType + _T(" :: ") + argToken->m_Name + _T("_f") + argToken->m_Args.Lower());
+                if (tys.fType.Find(_T("intent(out)")) == wxNOT_FOUND)
                 {
                     additionalCalls.Add(_T("call string_copy_c_f(") + argToken->m_Name + _T(", ") + argToken->m_Name + _T("_f)"));
                     m_WriteStrCtoF = true;
                 }
-                if (tya[0].Find(_T("intent(in)")) == wxNOT_FOUND)
+                if (tys.fType.Find(_T("intent(in)")) == wxNOT_FOUND)
                 {
                     additionalCalls2.Add(_T("call string_copy_f_c(") + argToken->m_Name + _T("_f, ") + argToken->m_Name + _T(")"));
                     m_WriteStrFtoC = true;
                 }
                 changedNamesMap[argToken->m_Name] = argToken->m_Name + _T("_f");
             }
-            else if (tya[0].StartsWith(_T("logical")) && tya[1].StartsWith(_T("integer")))
+            else if (tys.fType.StartsWith(_T("logical")) && tys.bType.StartsWith(_T("integer")))
             {
-                wxString fDec = tya[0];
+                wxString fDec = tys.fType;
                 fDec.Replace(_T(", intent(in)"),_T(""));
                 fDec.Replace(_T(", intent(out)"),_T(""));
                 fDec.Replace(_T(", intent(inout)"),_T(""));
@@ -1463,35 +1586,43 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
                 }
 
                 additionalDeclar.Add(fDec + _T(" :: ") + bvName);
-                if (tya[0].Find(_T("intent(out)")) == wxNOT_FOUND)
+                if (tys.fType.Find(_T("intent(out)")) == wxNOT_FOUND)
                 {
                     additionalCalls.Add(bvName + _T(" = int_to_log(") + argToken->m_Name + _T(")"));
                     m_WriteIntToLog = true;
                 }
-                if (tya[0].Find(_T("intent(in)")) == wxNOT_FOUND)
+                if (tys.fType.Find(_T("intent(in)")) == wxNOT_FOUND)
                 {
                     additionalCalls2.Add(argToken->m_Name + _T(" = log_to_int(") + bvName + _T(")"));
                     m_WriteLogToInt = true;
                 }
                 changedNamesMap[argToken->m_Name] = bvName;
             }
-            txtBindSecond << GetIS() << tya[1] << _T(" :: ") << argToken->m_Name;
-            txtHeadersThis << tya[2] << _T(" ") << argToken->m_Name << tya[3];
-            funInterface.Add(tya[0] + _T(" :: ") + argToken->m_Name);
+            txtBindSecond << GetIS() << tys.bType << _T(" :: ") << argToken->m_Name;
+            txtHeadersThis << tys.cType << _T(" ") << argToken->m_Name << tys.cDim;
+            funInterface.Add(tys.fType + _T(" :: ") + argToken->m_Name);
 
-            wxArrayString tyaPy = GetBindTypePy(tya);
-            if (tyaPy[4].IsEmpty())
+            TypePyx tyaPy = GetBindTypePy(tys);
+            if (tyaPy.fDrvTypeName.IsEmpty())
             {
-                txtCythonSecond << tyaPy[0] << _T(" ") << argToken->m_Name << tyaPy[1];
-                txtCythonSecond2 << _T("&") << argToken->m_Name << tyaPy[2];
+                if (tyaPy.hide)
+                {
+                    additionalDeclarPy.Add(_T("cdef ") + tyaPy.declarPyxFirst + _T(" ") + argToken->m_Name + tyaPy.initStr);
+                    if (txtCythonSecond.EndsWith(_T(", ")))
+                        txtCythonSecond.Truncate(txtCythonSecond.size()-2);
+                    argHideSetPy.insert(argToken->m_Name);
+                }
+                else
+                    txtCythonSecond << tyaPy.declarPyxFirst << _T(" ") << argToken->m_Name;
+                txtCythonSecond2 << _T("&") << argToken->m_Name << tyaPy.callCSecond;
             }
             else
             {
                 if (i == 0 && m_PyFirstArgAsSelf && m_InFortranModule && m_PyCreateClass &&
-                    (m_DefinedTypes.count(tyaPy[4]) == 1))
+                    (m_DefinedTypes.count(tyaPy.fDrvTypeName) == 1))
                 {
                     txtCythonSecond.Truncate(txtCythonSecond.size()-2);
-                    txtCythonSecond2 << _T("&self._") << tyaPy[4] << _T("_cp");
+                    txtCythonSecond2 << _T("&self._") << tyaPy.fDrvTypeName << _T("_cp");
                     usedSelfPy = true;
                 }
                 else
@@ -1501,17 +1632,17 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
                     m_pParser->GetAddress(token, address);
                     TokensArrayFlatClass tokensTmp;
                     TokensArrayFlat* resultTmp = tokensTmp.GetTokens();
-                    m_pParser->FindUseAssociatedTokens(true, address, tyaPy[4], false, *resultTmp, tkType, false);
+                    m_pParser->FindUseAssociatedTokens(true, address, tyaPy.fDrvTypeName, false, *resultTmp, tkType, false);
                     if (resultTmp->size() > 0 && resultTmp->Item(0)->m_ParentTokenKind == tkModule)
                     {
                         pyClassName = resultTmp->Item(0)->m_ParentName;
                     }
-                    txtCythonSecond << pyClassName << _T(" ") << argToken->m_Name << tyaPy[1];
-                    txtCythonSecond2 << _T("&") << argToken->m_Name << _T("._") << tyaPy[4] << _T("_cp");
+                    txtCythonSecond << pyClassName << _T(" ") << argToken->m_Name;
+                    txtCythonSecond2 << _T("&") << argToken->m_Name << _T("._") << tyaPy.fDrvTypeName << _T("_cp");
                 }
             }
 
-            if (!tyaPy[3].IsEmpty() && !usedSelfPy)
+            if (!tyaPy.intent.IsEmpty() && !usedSelfPy)
             {
                 if (!txtCythonSecond3.IsEmpty())
                     txtCythonSecond3 << _T(", ");
@@ -1545,12 +1676,16 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
     // Deal with assumed-shape arrays
     wxArrayString addVarNames;
     wxArrayString addVarNamesC;
-    wxArrayString additionalDeclarPy;
     wxArrayString addVarNamesPy;
+    wxArrayString addArgNamesPy;
     wxArrayString additionalDeclarPy_tmp;
     wxArrayString addVarNamesPy_tmp;
-    PrepareAssumedShapeVariables(txtBindSecond, argArr, dimVarNames, additionalDeclar, addVarNames, addVarNamesC, varNamesOfDim, additionalDeclarPy, addVarNamesPy);
-    PrepareAssumedShapeVariables(txtBindSecond, argArr, dimVarNamesFP, additionalDeclar, addVarNames, addVarNamesC, varNamesOfDimFP, additionalDeclarPy_tmp, addVarNamesPy_tmp);
+    StrSet argHideSetPy_tmp;
+    wxArrayString addArgNamesPy_tmp;
+    PrepareAssumedShapeVariables(txtBindSecond, argArr, dimVarNames, additionalDeclar, addVarNames, addVarNamesC, varNamesOfDim,
+                                 argHideSetPy, additionalDeclarPy, addVarNamesPy, addArgNamesPy);
+    PrepareAssumedShapeVariables(txtBindSecond, argArr, dimVarNamesFP, additionalDeclar, addVarNames, addVarNamesC, varNamesOfDimFP,
+                                 argHideSetPy_tmp, additionalDeclarPy_tmp, addVarNamesPy_tmp, addArgNamesPy_tmp);
     for (size_t i=0; i<addVarNames.size(); i++)
         txtBindFirst << _T(", ") << addVarNames.Item(i);
 
@@ -1657,6 +1792,8 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
     wxString txtCythonMore1;
     for (size_t i=0; i<additionalDeclarPy.size(); i++)
         txtCythonMore1 << GetIS(m_PyIndent) << additionalDeclarPy.Item(i) << _T("\n");
+    for (size_t i=0; i<addArgNamesPy.size(); i++)
+        txtCythonSecond << _T(", ") << addArgNamesPy.Item(i);
     txtCythonSecond << _T("):\n");
     txtCythonSecond << txtCythonMore1;
     for (size_t i=0; i<addVarNamesPy.size(); i++)
@@ -1682,169 +1819,118 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
 }
 
 
-wxArrayString Bindto::GetBindType(TokenF* token, int& nDimVarAdd)
+Bindto::TypeBind Bindto::GetBindType(TokenF* token, int& nDimVarAdd)
 {
     nDimVarAdd = 0;
-    wxArrayString retArr = GetBindType(token->m_TypeDefinition.Lower(), nDimVarAdd);
+    TypeBind retSt = GetBindType(token->m_TypeDefinition.Lower(), nDimVarAdd);
     if (token->m_Args.StartsWith(_T("(")))
     {
         wxString vDim = GetToken(token->m_Args.Lower(),0);
         wxString vDimHid;
         int nAssumedDim;
         HideAssumedShape(vDim, vDimHid, nAssumedDim);
-        if (retArr[0].Find(_T("dimension(")) == wxNOT_FOUND)
+        if (retSt.fType.Find(_T("dimension(")) == wxNOT_FOUND)
         {
-            int itn = retArr[0].Find(_T(", intent("));
-            int itn2 = retArr[1].Find(_T(", intent("));
+            int itn = retSt.fType.Find(_T(", intent("));
+            int itn2 = retSt.bType.Find(_T(", intent("));
             if (itn == wxNOT_FOUND || itn2 == wxNOT_FOUND)
             {
-                retArr[0] << _T(", dimension") << vDim;
-                if (retArr[0].StartsWith(_T("type(c_ptr)")) || !retArr[1].StartsWith(_T("type(c_ptr)")))
-                    retArr[1] << _T(", dimension") << vDimHid;
+                retSt.fType << _T(", dimension") << vDim;
+                if (retSt.fType.StartsWith(_T("type(c_ptr)")) || !retSt.bType.StartsWith(_T("type(c_ptr)")))
+                    retSt.bType << _T(", dimension") << vDimHid;
             }
             else
             {
-                retArr[0].insert(itn,_T(", dimension")+vDim);
-                if (retArr[0].StartsWith(_T("type(c_ptr)")) || !retArr[1].StartsWith(_T("type(c_ptr)")))
-                    retArr[1].insert(itn2,_T(", dimension")+vDimHid);
+                retSt.fType.insert(itn,_T(", dimension")+vDim);
+                if (retSt.fType.StartsWith(_T("type(c_ptr)")) || !retSt.bType.StartsWith(_T("type(c_ptr)")))
+                    retSt.bType.insert(itn2,_T(", dimension")+vDimHid);
             }
             nDimVarAdd = nAssumedDim;
         }
         else
         {
-            int idxDim = retArr[0].Find(_T("dimension("));
+            int idxDim = retSt.fType.Find(_T("dimension("));
             wxString vdimOld;
             if (idxDim != wxNOT_FOUND)
-                vdimOld = GetToken(retArr[0],idxDim+9);
-            int idxDim2 = retArr[1].Find(_T("dimension("));
+                vdimOld = GetToken(retSt.fType,idxDim+9);
+            int idxDim2 = retSt.bType.Find(_T("dimension("));
             wxString vdimOld2;
             if (idxDim2 != wxNOT_FOUND)
-                vdimOld2 = GetToken(retArr[1],idxDim2+9);
-            retArr[0].Replace(vdimOld,vDim);
+                vdimOld2 = GetToken(retSt.bType,idxDim2+9);
+            retSt.fType.Replace(vdimOld,vDim);
             if (!vdimOld2.IsEmpty())
-                retArr[1].Replace(vdimOld2,vDimHid);
+                retSt.bType.Replace(vdimOld2,vDimHid);
             nDimVarAdd = nAssumedDim;
         }
-        retArr[3] = GetCDims(vDim);
+        retSt.cDim = GetCDims(vDim);
     }
 
-    if (retArr[3].IsEmpty())
-        retArr[2] << _T("*"); // variable as C pointer
+    if (retSt.cDim.IsEmpty())
+        retSt.cType << _T("*"); // variable as C pointer
 
-    return retArr;
+    return retSt;
 }
 
 
-wxArrayString Bindto::GetBindType(const wxString& declar, int& nDimVarAdd)
+Bindto::TypeBind Bindto::GetBindType(const wxString& declar, int& nDimVarAdd)
 {
-    wxString declarLw = declar;
+    wxString declarLw = declar.Lower();
     declarLw.Replace(_T(" "),_T(""));
     nDimVarAdd = 0;
-
     wxString ftype;
     wxString fCharLen;
-    int iPos = declarLw.Find(',');
-    int jPos = declarLw.Find('(');
+    wxArrayString fTypeKind = GetTypeAndKind(declarLw);
+
     if (declarLw.StartsWith(_T("character")))
     {
         // deal with character type
-        if (iPos == wxNOT_FOUND && jPos == wxNOT_FOUND)
+        wxString klstr = fTypeKind.Item(1);
+        int iLen = klstr.Find(_T("len="));
+        int iKin = klstr.Find(_T("kind="));
+        if (iLen != wxNOT_FOUND)
         {
-            ftype = _T("character");
-            if (declarLw.GetChar(9) == '*' && declarLw.Len() > 10)
+            int lnd = klstr.Mid(iLen+4).Find(_T(","));
+            if (lnd == wxNOT_FOUND)
             {
-                fCharLen = declarLw.Mid(10);
-            }
-            else
-                fCharLen = _T("1");
-        }
-        else if ((iPos != wxNOT_FOUND && jPos != wxNOT_FOUND && iPos < jPos) ||
-                 (iPos != wxNOT_FOUND && jPos == wxNOT_FOUND))
-        {
-                ftype = _T("character");
-                if (declarLw.GetChar(9) == '*' && declarLw.Len() > 10)
-                {
-                    fCharLen = declarLw.Mid(10,iPos-10);
-                }
-                else
-                    fCharLen = _T("1");
-        }
-        else if ((iPos != wxNOT_FOUND && jPos != wxNOT_FOUND && iPos > jPos) ||
-                 (iPos == wxNOT_FOUND && jPos != wxNOT_FOUND))
-        {
-            wxString klstr = GetToken(declarLw,jPos);
-            int iLen = klstr.Find(_T("len="));
-            if (iLen != wxNOT_FOUND)
-            {
-                int lnd = klstr.Mid(iLen+4).Find(_T(","));
+                lnd = klstr.Mid(iLen+4).Find(_T(")"));
                 if (lnd == wxNOT_FOUND)
-                {
-                    lnd = klstr.Mid(iLen+4).Find(_T(")"));
-                    if (lnd == wxNOT_FOUND)
-                        lnd = klstr.size();
-                }
-                fCharLen = klstr.Mid(iLen+4,lnd);
+                    lnd = klstr.size();
             }
-            else
-            {
-                fCharLen = klstr.Mid(1,klstr.size()-2);
-            }
+            fCharLen = klstr.Mid(iLen+4,lnd);
+        }
+        else if (iKin == wxNOT_FOUND)
+        {
+            fCharLen = klstr;
+        }
+        else // (iKin != wxNOT_FOUND)
+        {
+            fCharLen = _T("1");
+        }
 
-            wxString fCharKind;
-            int iKin = klstr.Find(_T("kind="));
-            if (iKin != wxNOT_FOUND)
+        wxString fCharKind;
+        if (iKin != wxNOT_FOUND)
+        {
+            int lnd = klstr.Mid(iKin+5).Find(_T(","));
+            if (lnd == wxNOT_FOUND)
             {
-                int lnd = klstr.Mid(iKin+5).Find(_T(","));
-                if (lnd == wxNOT_FOUND)
-                {
-                    lnd = klstr.size()-iKin-6;
-                }
-                fCharKind = klstr.Mid(iKin+5,lnd);
+                lnd = klstr.size()-iKin-6;
             }
-            if (fCharKind.IsEmpty())
-                ftype = _T("character");
-            else
-                ftype = _T("character(kind=") + fCharKind + _T(")");
+            fCharKind = klstr.Mid(iKin+5,lnd);
         }
+        if (fCharKind.IsEmpty())
+            ftype = _T("character");
+        else
+            ftype = _T("character(kind=") + fCharKind + _T(")");
     }
     else
     {
-        if (iPos != wxNOT_FOUND && jPos != wxNOT_FOUND)
-        {
-            if (iPos < jPos)
-                ftype = declarLw.Mid(0,iPos);
-            else
-            {
-                ftype = declarLw.Mid(0,jPos);
-                wxString vkind = GetToken(declarLw,jPos);
-                vkind.Replace(_T("kind="),_T(""));
-                ftype << vkind;
-            }
-        }
-        else if (iPos == wxNOT_FOUND && jPos != wxNOT_FOUND)
-        {
-            ftype = declarLw.Mid(0,jPos);
-            wxString vkind = GetToken(declarLw,jPos);
-            vkind.Replace(_T("kind="),_T(""));
-            ftype << vkind;
-        }
-        else if (iPos != wxNOT_FOUND && jPos == wxNOT_FOUND)
-        {
-            ftype = declarLw.Mid(0,iPos);
-        }
-        else //if (iPos == wxNOT_FOUND && jPos == wxNOT_FOUND)
-        {
-            ftype = declarLw;
-            int kPos = ftype.Find('*');
-            if (kPos != wxNOT_FOUND)
-            {
-                ftype.Replace(_T("*"),_T("("),false);
-                ftype.Append(_T(")"));
-            }
-        }
+        ftype = fTypeKind.Item(0);
+        fTypeKind.Item(1).Replace(_T("kind="),_T(""));
+        if (!fTypeKind.Item(1).IsEmpty())
+            ftype << _T("(") << fTypeKind.Item(1) << _T(")");
     }
 
-    wxArrayString retArr;
+    TypeBind retSt;
     bool wasNotFound = false;
     if (m_TypeMap.count(ftype) == 0)
     {
@@ -1889,9 +1975,9 @@ wxArrayString Bindto::GetBindType(const wxString& declar, int& nDimVarAdd)
                                 if (pChildren->Item(i)->m_TokenKind == tkVariable)
                                 {
                                     int itmp;
-                                    wxArrayString bindTArr = GetBindType(pChildren->Item(i), itmp);
+                                    TypeBind bindT = GetBindType(pChildren->Item(i), itmp);
                                     m_CStructs << GetIS(1);
-                                    m_CStructs << bindTArr[2] << _T(" ") << pChildren->Item(i)->m_Name << bindTArr[3];
+                                    m_CStructs << bindT.cType << _T(" ") << pChildren->Item(i)->m_Name << bindT.cDim[3];
                                     m_CStructs << _T("\n");
                                 }
                             }
@@ -1916,68 +2002,70 @@ wxArrayString Bindto::GetBindType(const wxString& declar, int& nDimVarAdd)
     {
         if (m_NotFoundTypes.count(ftype) == 0)
         {
-            m_WarnMessage << _("WARNING: Fortran type '") << ftype << _("' was not found between bind types.\n");
+            m_WarnMessage << _("ERROR: Fortran type '") << ftype << _("' was not found between bind types.\n");
             m_WarnMessage << _("File: ") << m_CurFile;
             if (!m_CurModule.IsEmpty())
                 m_WarnMessage << _("; Module: ") << m_CurModule;
             m_WarnMessage << _("; Procedure: ") << m_CurProcedure << _T("\n");
             m_NotFoundTypes.insert(ftype);
         }
-        wxArrayString emptArr;
-        emptArr.Add(ftype);
-        emptArr.Add(wxEmptyString,3);
-        return emptArr;
+        TypeBind emptSt;
+        emptSt.fType = ftype;
+        return emptSt;
     }
     else
     {
-        retArr = m_TypeMap[ftype]; //size==2
-        retArr.Insert(ftype,0); //size==3
-        retArr.Add(wxEmptyString); //size==4
+        wxArrayString retArr = m_TypeMap[ftype]; //size==2
+        retSt.bType = retArr[0];
+        retSt.cType = retArr[1];
+        retSt.fType = ftype;
+        retSt.cDim = wxEmptyString;
     }
 
-    if (retArr[2].StartsWith(_T("int8_t")) ||
-        retArr[2].StartsWith(_T("int16_t")) ||
-        retArr[2].StartsWith(_T("int32_t")) ||
-        retArr[2].StartsWith(_T("int64_t")))
+    if (retSt.cType.StartsWith(_T("int8_t")) ||
+        retSt.cType.StartsWith(_T("int16_t")) ||
+        retSt.cType.StartsWith(_T("int32_t")) ||
+        retSt.cType.StartsWith(_T("int64_t")))
     {
         m_CInclude.insert(_T("#include <stdint.h>"));
+        m_PyInclude.insert(_T("from libc.stdint cimport *"));
     }
-    else if (retArr[2].StartsWith(_T("float complex")) ||
-             retArr[2].StartsWith(_T("double complex")))
+    else if (retSt.cType.StartsWith(_T("float complex")) ||
+             retSt.cType.StartsWith(_T("double complex")))
     {
         m_CInclude.insert(_T("#include <complex.h>"));
     }
 
-    iPos = declarLw.Find(_T("dimension("));
+    int iPos = declarLw.Find(_T("dimension("));
     if (iPos != wxNOT_FOUND)
     {
         wxString vdim = GetToken(declarLw,iPos+9);
-        retArr[0] << _T(", dimension") << vdim;
+        retSt.fType << _T(", dimension") << vdim;
         int nAssumedDim;
         wxString vdimHid;
         HideAssumedShape(vdim, vdimHid, nAssumedDim);
-        if (!retArr[0].StartsWith(_T("type(c_ptr)")) && retArr[1].StartsWith(_T("type(c_ptr)")))
+        if (!retSt.fType.StartsWith(_T("type(c_ptr)")) && retSt.bType.StartsWith(_T("type(c_ptr)")))
             ;
         else
         {
-            retArr[1] << _T(", dimension") << vdimHid;
-            retArr[3] << GetCDims(vdim);
+            retSt.bType << _T(", dimension") << vdimHid;
+            retSt.cDim << GetCDims(vdim);
             nDimVarAdd += nAssumedDim;
         }
     }
 
-    if (retArr[0].StartsWith(_T("character(")))
+    if (retSt.fType.StartsWith(_T("character(")))
     {
-        int pos = retArr[0].Find(')',true);
+        int pos = retSt.fType.Find(')',true);
         if (pos != wxNOT_FOUND)
-            retArr[0] = retArr[0].Mid(0,pos) + _T(",len=")+fCharLen+_T(")");
+            retSt.fType = retSt.fType.Mid(0,pos) + _T(",len=")+fCharLen+_T(")");
     }
-    else if (retArr[0].StartsWith(_T("character")))
+    else if (retSt.fType.StartsWith(_T("character")))
     {
-        retArr[0].Replace(_T("character"), _T("character(len=")+fCharLen+_T(")"));
+        retSt.fType.Replace(_T("character"), _T("character(len=")+fCharLen+_T(")"));
     }
 
-    if (retArr[0].StartsWith(_T("character")))
+    if (retSt.fType.StartsWith(_T("character")))
     {
         long numCharLen;
         wxString cDim;
@@ -1993,18 +2081,50 @@ wxArrayString Bindto::GetBindType(const wxString& declar, int& nDimVarAdd)
         }
         else
             cDim = _T("");
-        retArr[1] << _T(", dimension") << _T("(") << fCharLen << _T(")");
-        retArr[3] << cDim;
+        retSt.bType << _T(", dimension") << _T("(") << fCharLen << _T(")");
+        retSt.cDim << cDim;
     }
 
     iPos = declarLw.Find(_T("intent("));
     if (iPos != wxNOT_FOUND)
     {
         wxString vinout = GetToken(declarLw,iPos+6);
-        retArr[0] << _T(", intent") << vinout;
-        retArr[1] << _T(", intent") << vinout;
+        retSt.fType << _T(", intent") << vinout;
+        retSt.bType << _T(", intent") << vinout;
     }
-    return retArr;
+    return retSt;
+}
+
+wxArrayString Bindto::GetTypeAndKind(wxString decl)
+{
+    wxArrayString fTK;
+    fTK.Add(_T(""),2);
+    decl.Replace(_T(" "), _T(""));
+    wxStringTokenizer tokenizer(decl, _T("(*,"), wxTOKEN_STRTOK);
+    if (tokenizer.CountTokens() == 0)
+        return fTK;
+    else if (tokenizer.CountTokens() == 1)
+        fTK.Item(0) = tokenizer.GetNextToken();
+    else
+    {
+        fTK.Item(0) = tokenizer.GetNextToken();
+        wxChar delim = tokenizer.GetLastDelimiter();
+        if (delim == '(')
+        {
+            size_t pos = tokenizer.GetPosition() - 1;
+            wxString ks = GetToken(decl,pos);
+            fTK.Item(1) = ks.Mid(1,ks.size()-2);
+        }
+        else if (delim == '*')
+        {
+            wxString kind = tokenizer.GetNextToken();
+            if (fTK.Item(0).IsSameAs(_T("complex")))
+                fTK.Item(0) << _T("*") << kind;
+            else
+                fTK.Item(1) = kind;
+        }
+    }
+    return fTK;
 }
 
 wxString Bindto::GetFunctionDeclaration(TokenF* token)
@@ -2072,8 +2192,8 @@ wxString Bindto::GetFunctionDeclaration(TokenF* token)
             {
                 m_pTokenCurrent = argToken;
                 int itmp;
-                wxArrayString tya = GetBindType(argToken, itmp);
-                funType = tya[0];
+                TypeBind tys = GetBindType(argToken, itmp);
+                funType = tys.fType;
                 if (!argToken->m_Args.IsEmpty())
                 {
                     funType << _T(", dimension") << argToken->m_Args.Lower();
@@ -2153,58 +2273,22 @@ wxString Bindto::GetCDims(wxString vdim)
 void Bindto::OnAdd(wxCommandEvent& event)
 {
     BindtoNewType addNewType(this);
+    ShowNewTypeDlg(addNewType);
+}
+
+void Bindto::ShowNewTypeDlg(BindtoNewType& addNewType)
+{
     while (true)
     {
         if (addNewType.ShowModal() == wxID_OK)
         {
             wxString ft = addNewType.GetFortranType();
-            wxString bt = addNewType.GetBindCType();
-            wxString ct = addNewType.GetCType();
-            ft.Replace(_T(" "),_T(""));
-            if (ft.StartsWith(_T("character(")))
-            {
-                int idx = ft.Find(_T("kind="));
-                if (idx != wxNOT_FOUND)
-                {
-                    wxString kn = ft.Mid(idx+5);
-                    int idx1 = kn.Find(',');
-                    int idx2 = kn.Find(')');
-                    if (idx1 != wxNOT_FOUND && idx2 != wxNOT_FOUND)
-                    {
-                        if (idx1 > idx2)
-                            kn.Truncate(idx2);
-                        else
-                            kn.Truncate(idx1);
-                    }
-                    else if (idx1 != wxNOT_FOUND)
-                        kn.Truncate(idx1);
-                    else if (idx2 != wxNOT_FOUND)
-                        kn.Truncate(idx2);
-                    ft = _T("character(kind=") + kn + _T(")");
-                }
-                else
-                    ft = _T("character");
-            }
-            else if (ft.StartsWith(_T("character")))
-                ft = _T("character");
-            else if (ft.StartsWith(_T("integer(")) ||
-                     ft.StartsWith(_T("real(")) ||
-                     ft.StartsWith(_T("complex(")))
-            {
-                ft.Replace(_T("kind="),_T(""));
-            }
-            else if (ft.StartsWith(_T("integer*")) ||
-                     ft.StartsWith(_T("real*")) ||
-                     ft.StartsWith(_T("complex*")))
-            {
-                ft.Replace(_T("*"),_T("("),false);
-                ft.Append(_T(")"));
-            }
+            wxString bt = addNewType.GetBindCType().Trim(true).Trim(false);
+            wxString ct = addNewType.GetCType().Trim(true).Trim(false);
+            PrepateTypes(ft,bt,ct);
 
             if (m_TypeMap.count(ft) == 0)
             {
-                bt.Replace(_T(" "),_T(""));
-                ct.Trim(true).Trim(false);
                 wxArrayString bcta;
                 bcta.Add(bt);
                 bcta.Add(ct);
@@ -2221,6 +2305,51 @@ void Bindto::OnAdd(wxCommandEvent& event)
         }
         else
             break;
+    }
+}
+
+void Bindto::PrepateTypes(wxString& ft, wxString& bt, wxString& ct)
+{
+    bt.Trim(true).Trim(false);
+    ct.Trim(true).Trim(false);
+    ft.Replace(_T(" "),_T(""));
+    if (ft.StartsWith(_T("character(")))
+    {
+        int idx = ft.Find(_T("kind="));
+        if (idx != wxNOT_FOUND)
+        {
+            wxString kn = ft.Mid(idx+5);
+            int idx1 = kn.Find(',');
+            int idx2 = kn.Find(')');
+            if (idx1 != wxNOT_FOUND && idx2 != wxNOT_FOUND)
+            {
+                if (idx1 > idx2)
+                    kn.Truncate(idx2);
+                else
+                    kn.Truncate(idx1);
+            }
+            else if (idx1 != wxNOT_FOUND)
+                kn.Truncate(idx1);
+            else if (idx2 != wxNOT_FOUND)
+                kn.Truncate(idx2);
+            ft = _T("character(kind=") + kn + _T(")");
+        }
+        else
+            ft = _T("character");
+    }
+    else if (ft.StartsWith(_T("character")))
+        ft = _T("character");
+    else if (ft.StartsWith(_T("integer(")) ||
+             ft.StartsWith(_T("real(")) ||
+             ft.StartsWith(_T("complex(")))
+    {
+        ft.Replace(_T("kind="),_T(""));
+    }
+    else if (ft.StartsWith(_T("integer*")) ||
+             ft.StartsWith(_T("real*")))
+    {
+        ft.Replace(_T("*"),_T("("),false);
+        ft.Append(_T(")"));
     }
 }
 
@@ -2241,11 +2370,9 @@ void Bindto::OnEdit(wxCommandEvent& event)
         if (editNewType.ShowModal() == wxID_OK)
         {
             wxString ft = editNewType.GetFortranType();
-            wxString bt = editNewType.GetBindCType();
-            wxString ct = editNewType.GetCType();
-            ft.Replace(_T(" "),_T(""));
-            bt.Replace(_T(" "),_T(""));
-            ct.Replace(_T(" "),_T(""));
+            wxString bt = editNewType.GetBindCType().Trim(true).Trim(false);
+            wxString ct = editNewType.GetCType().Trim(true).Trim(false);
+            PrepateTypes(ft,bt,ct);
             if (ft.IsSameAs(ft_old) && bt.IsSameAs(bt_old) && ct.IsSameAs(ct_old))
                 break;
             else
@@ -2517,7 +2644,8 @@ wxString Bindto::GetHelperModule(bool useGlobal)
 
 void Bindto::PrepareAssumedShapeVariables(wxString& txtBindSecond, const wxArrayString& argArr, const wxArrayString& dimVarNames,
                                           wxArrayString& additionalDeclar, wxArrayString& addVarNames, wxArrayString& addVarNamesC,
-                                          const wxArrayString& varNamesOfDim, wxArrayString& additionalDeclarPy, wxArrayString& addVarNamesPy)
+                                          const wxArrayString& varNamesOfDim, const StrSet& argHideSetPy,
+                                          wxArrayString& additionalDeclarPy, wxArrayString& addVarNamesPy, wxArrayString& addArgNamesPy)
 {
     if (dimVarNames.size() == 0)
         return;
@@ -2525,15 +2653,39 @@ void Bindto::PrepareAssumedShapeVariables(wxString& txtBindSecond, const wxArray
     if (dimVarNames.size() != varNamesOfDim.size())
         return; // programming error
 
-    wxString arrVarOld;
-    int iShape;
+    wxArrayInt ndims;
+    wxString varNameOld;
+    int iShape = 0;
+    for (size_t i=0; i<varNamesOfDim.size(); i++)
+    {
+        if (varNameOld.IsSameAs(varNamesOfDim.Item(i)))
+            iShape += 1;
+        else if (i > 0)
+        {
+            int nd = iShape + 1;
+            for (int j=0; j<nd; j++)
+                ndims.Add(nd);
+            iShape = 0;
+        }
+        varNameOld = varNamesOfDim.Item(i);
+    }
+    int nd = iShape + 1;
+    for (int j=0; j<nd; j++)
+        ndims.Add(nd);
+    if (ndims.size() != dimVarNames.size())
+    {
+        Manager::Get()->GetLogManager()->DebugLog(_T("FortranProject: ndims.size() != dimVarNames.size()"));
+        return; // programming error;
+    }
+
+    varNameOld = _T("");
     for (size_t i=0; i<dimVarNames.size(); i++)
     {
-        if (arrVarOld.IsSameAs(varNamesOfDim.Item(i)))
+        if (varNameOld.IsSameAs(varNamesOfDim.Item(i)))
             iShape += 1;
         else
             iShape = 0;
-        arrVarOld = varNamesOfDim.Item(i);
+        varNameOld = varNamesOfDim.Item(i);
 
         wxString var = dimVarNames.Item(i);
         txtBindSecond.Replace(DIM_VAR_KEY, var, false);
@@ -2542,8 +2694,22 @@ void Bindto::PrepareAssumedShapeVariables(wxString& txtBindSecond, const wxArray
             additionalDeclar.Add(_T("integer(c_int), intent(in) :: ") + var);
             addVarNames.Add(var);
             addVarNamesC.Add(_T("int* ") + var);
-            wxString sShape = wxString::Format(_T("%d"),iShape);
-            additionalDeclarPy.Add(_T("cdef int ") + var + _T(" = ") + varNamesOfDim.Item(i) + _T(".shape[") + sShape + _T("]"));
+            if (argHideSetPy.count(varNamesOfDim.Item(i)) == 1)
+            {
+                wxString dimVarKeyI = DIM_VAR_KEY + wxString::Format(_T("%d"),iShape);
+                for (size_t j=0; j<additionalDeclarPy.size(); j++)
+                {
+                    if (additionalDeclarPy.Item(j).Replace(dimVarKeyI, var, false) > 0)
+                        break;
+                }
+                addArgNamesPy.Add(_T("int ") + var);
+            }
+            else
+            {
+                int iShapeWrite = ndims[i] - iShape - 1;
+                wxString sShape = wxString::Format(_T("%d"),iShapeWrite);
+                additionalDeclarPy.Add(_T("cdef int ") + var + _T(" = ") + varNamesOfDim.Item(i) + _T(".shape[") + sShape + _T("]"));
+            }
             addVarNamesPy.Add(_T("&") + var);
         }
     }
@@ -2600,9 +2766,7 @@ void Bindto::AddDimVariablesFromDoc(wxArrayString& dimVarNames, int& nDimVarAdd,
     wxArrayString dimArr;
     wxStringTokenizer tkz(dimsStr, _T("(), "), wxTOKEN_STRTOK );
     while ( tkz.HasMoreTokens() )
-    {
         dimArr.Add(tkz.GetNextToken());
-    }
     if (int(dimArr.size()) != nDimVarAdd)
         return; // wrong number of variables
 
@@ -2866,70 +3030,117 @@ void Bindto::Onrb_ActiveProjectSelect(wxCommandEvent& event)
     cb_globalToOne->Enable(enab);
     tc_globalFilename->Enable(enab);
     st_globalFilename->Enable(enab);
+
+    wxString initstr;
+    if (rb_ActiveProject->GetValue())
+        initstr = m_InitialOutputDirFile;
+    else
+        initstr = m_InitialOutputDirProj;
+    wxString dir = tc_OutputDir->GetValue();
+    if (dir.IsSameAs(initstr))
+    {
+        if (rb_ActiveProject->GetValue())
+            tc_OutputDir->SetValue(m_InitialOutputDirProj);
+        else
+            tc_OutputDir->SetValue(m_InitialOutputDirFile);
+    }
 }
 
 wxString Bindto::GetPyName(const wxString& procName, const wxString& moduleName)
 {
-    if (m_BindPyName.IsEmpty())
-        return procName + _T("_py");
-    return GetProcName(procName, moduleName, m_BindPyName);
+    if (m_PyFuncName.IsEmpty())
+        return procName + _T("_f");
+    return GetProcName(procName, moduleName, m_PyFuncName);
 }
 
-wxArrayString Bindto::GetBindTypePy(const wxArrayString& tya)
+Bindto::TypePyx Bindto::GetBindTypePy(const TypeBind& tya)
 {
-    wxArrayString tyaPy;
+    TypePyx tyaPy;
+    tyaPy.hide = false;
     wxString fTName;
     wxString decPyx;
-    if (tya[2].EndsWith(_T("*")))
-        decPyx = tya[2].Mid(0,tya[2].size()-1);
+    if (tya.cType.EndsWith(_T("*")))
+        decPyx = tya.cType.Mid(0,tya.cType.size()-1);
     if (decPyx.IsSameAs(_T("void*")) || decPyx.IsSameAs(_T("void")))
     {
-        if (tya[0].StartsWith(_T("type(")))
-            fTName = GetToken(tya[0],4);
-        else if (tya[0].StartsWith(_T("class(")))
-            fTName = GetToken(tya[0],5);
+        if (tya.fType.StartsWith(_T("type(")))
+            fTName = GetToken(tya.fType,4);
+        else if (tya.fType.StartsWith(_T("class(")))
+            fTName = GetToken(tya.fType,5);
         if (fTName.StartsWith(_T("(")) && fTName.EndsWith(_T(")")))
             fTName = fTName.Mid(1,fTName.size()-2);
         decPyx = _T("");
     }
-    int idx = tya[1].Find(_T("dimension("));
+
+    int idx = tya.bType.Find(_T("intent("));
+    if (idx != wxNOT_FOUND)
+    {
+        idx = tya.bType.Find(_T("intent(out)"));
+        if (idx != wxNOT_FOUND)
+        {
+            tyaPy.intent = _T("out");
+            tyaPy.hide = true;
+        }
+        idx = tya.bType.Find(_T("intent(inout)"));
+        if (idx != wxNOT_FOUND)
+            tyaPy.intent = _T("inout");
+    }
+
+    idx = tya.bType.Find(_T("dimension("));
     size_t ndim = 0;
     if (idx != wxNOT_FOUND)
     {
-        wxString dims = GetToken(tya[1],idx+9);
-        ndim = dims.Replace(_T(","),_T(";")) + 1;
-        decPyx = wxString::Format(_T("np.ndarray[") + decPyx + _T(",ndim=%d]"), ndim);
+        wxString dims = GetToken(tya.bType,idx+9);
+        if (tyaPy.intent.IsSameAs(_T("out")) && dims.Find(_T("*")) == wxNOT_FOUND)
+        {
+            wxArrayString dimsArr;
+            wxStringTokenizer tkz(dims, _T("(), "),wxTOKEN_STRTOK);
+            while ( tkz.HasMoreTokens() )
+            {
+                wxString d1str = tkz.GetNextToken();
+                if (d1str.IsSameAs(DIM_VAR_KEY))
+                    d1str << wxString::Format(_T("%d"),dimsArr.size());
+                dimsArr.Insert(d1str,0);
+            }
+
+            ndim = dimsArr.size();
+            dims = _T("[");
+            for (size_t i=0; i<ndim; i++)
+                dims << dimsArr.Item(i) << _T(",");
+            dims.Truncate(dims.size()-1);
+            dims << _T("]");
+
+            wxString npType;
+            if (m_C2NumpyTypes.count(decPyx) == 1)
+                npType = _T("np.") + m_C2NumpyTypes[decPyx];
+            else
+                npType = decPyx;
+            tyaPy.initStr = _T(" = np.empty(") + dims + _T(", dtype=") + npType + _T(")");
+            decPyx = wxString::Format(_T("np.ndarray[") + decPyx + _T(",ndim=%d]"), ndim);
+        }
+        else
+        {
+            ndim = dims.Replace(_T(","),_T(";")) + 1;
+            decPyx = wxString::Format(_T("np.ndarray[") + decPyx + _T(",ndim=%d]"), ndim);
+            tyaPy.hide = false;
+        }
     }
-    tyaPy.Add(decPyx);
-    tyaPy.Add(_T(""));
-    tyaPy.Add(_T(""));
-    tyaPy.Add(_T(""));
-    tyaPy.Add(_T(""));
+    tyaPy.declarPyxFirst = decPyx;
     if (ndim > 0)
     {
-        tyaPy[2] = _T("[");
+        tyaPy.callCSecond = _T("[");
         for (size_t i=0; i<ndim; i++)
         {
             if (i+1 < ndim)
-                tyaPy[2] << _T("0,");
+                tyaPy.callCSecond << _T("0,");
             else
-                tyaPy[2] << _T("0");
+                tyaPy.callCSecond << _T("0");
         }
-        tyaPy[2] << _T("]");
+        tyaPy.callCSecond << _T("]");
     }
 
-    idx = tya[1].Find(_T("intent("));
-    if (idx != wxNOT_FOUND)
-    {
-        idx = tya[1].Find(_T("intent(out)"));
-        if (idx != wxNOT_FOUND)
-            tyaPy[3] = _T("out");
-        idx = tya[1].Find(_T("intent(inout)"));
-        if (idx != wxNOT_FOUND)
-            tyaPy[3] = _T("inout");
-    }
     if (!fTName.IsEmpty())
-        tyaPy[4] = fTName;
+        tyaPy.fDrvTypeName = fTName;
 
     return tyaPy;
 }
@@ -2937,8 +3148,93 @@ wxArrayString Bindto::GetBindTypePy(const wxArrayString& tya)
 wxString Bindto::CreateCythonFilename(const wxString& filename)
 {
     wxFileName fname(filename);
-        fname.SetExt(_T("pyx"));
+    fname.SetPath(m_OutputDir);
+    fname.SetExt(_T("pyx"));
 
     return CheckOverwriteFilename(fname);
 }
 
+void Bindto::GetInitialOutputDir(wxString& initialOutputDirFile, wxString& initialOutputDirProj)
+{
+    initialOutputDirFile = _T("");
+    initialOutputDirProj = _T("");
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (ed)
+    {
+        wxString fname = UnixFilename(ed->GetFilename());
+        ProjectsArray* projects = Manager::Get()->GetProjectManager()->GetProjects();
+        for (size_t i = 0; i < projects->GetCount(); ++i)
+        {
+            cbProject* pr = projects->Item(i);
+            if (pr->GetFileByFilename(fname, false, true))
+            {
+                // file belongs to this project
+                wxFileName dirname(pr->GetBasePath(),_T(""));
+                dirname.AppendDir(_T("bind"));
+                initialOutputDirFile = dirname.GetPath();
+            }
+        }
+    }
+    cbProject* pr = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (pr)
+    {
+        wxFileName dirname(pr->GetBasePath(),_T(""));
+        dirname.AppendDir(_T("bind"));
+        initialOutputDirProj = dirname.GetPath();
+    }
+}
+
+bool Bindto::MakeOutputDir()
+{
+    wxFileName dirname = wxFileName::DirName(m_OutputDir);
+    if (!dirname.DirExists() && !dirname.Mkdir())
+        return false;
+    return true;
+}
+
+bool Bindto::VlidatePyFuncName()
+{
+    wxString msg;
+    if (m_PyFuncName.IsEmpty())
+        msg = _("\"Python function names\" text field cannot be empty.");
+    else if (m_PyFuncName.IsSameAs(m_BindCName))
+        msg = _("Python function names should be different from Bind(C) names.\nCorrect \"BIND(C, name=#)\" or \"Python function names\" text field.");
+
+    if (!msg.IsEmpty())
+    {
+        cbMessageBox( msg, _("Error"), wxICON_ERROR);
+        return false;
+    }
+    return true;
+}
+
+void Bindto::Onbt_OutputDirClick(wxCommandEvent& event)
+{
+    wxDirDialog dlg(this, _T("Choose output directory"), tc_OutputDir->GetValue(), wxDD_DEFAULT_STYLE | wxDD_NEW_DIR_BUTTON);
+    if (dlg.ShowModal() == wxID_OK)
+    {
+         wxString path = dlg.GetPath();
+         tc_OutputDir->SetValue(path);
+    }
+}
+
+void Bindto::Oncb_genCythonClick(wxCommandEvent& event)
+{
+    bool enpy = cb_genCython->GetValue();
+    pn_pyOpts->Enable(enpy);
+}
+
+void Bindto::OnCopy(wxCommandEvent& event)
+{
+    long sel = lv_Types->GetFirstSelected();
+    if (sel == -1)
+        return;
+    wxString ft_old = lv_Types->GetItemText(sel);
+    wxArrayString bcArr = m_TypeMap[ft_old];
+    wxString bt_old = bcArr[0];
+    wxString ct_old = bcArr[1];
+
+    BindtoNewType newTypeDlg(this);
+    newTypeDlg.SetEditType(ft_old,bt_old,ct_old);
+    ShowNewTypeDlg(newTypeDlg);
+}

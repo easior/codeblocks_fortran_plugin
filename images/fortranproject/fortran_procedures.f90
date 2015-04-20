@@ -1450,6 +1450,15 @@ function MATMUL(MATRIX_A, MATRIX_B)
     ! Return value:
     !    The matrix product of MATRIX_A and MATRIX_B. The type and kind of the result follow the usual type
     !    and kind promotion rules, as for the * or .AND. operators.
+    !    The rank and shape of the result depends on the rank and shapes of the arguments, as follows:
+    !    If MATRIX_A has shape (n, m) and MATRIX_B has shape (m, k), the result is a rank-two array with shape (n, k).
+    !    If MATRIX_A has shape (m) and MATRIX_B has shape (m, k), the result is a rank-one array with shape (k).
+    !    If MATRIX_A has shape (n, m) and MATRIX_B has shape (m), the result is a rank-one array with shape (n).
+    !
+    !    If the arguments are of numeric type, element (i, j) of the result has the value 
+    !    SUM ((row i of MATRIX_A) * (column j of MATRIX_B)). If the arguments are of logical type, element (i, j) 
+    !    of the result has the value ANY ((row i of MATRIX_A) .AND. (column j of MATRIX_B)).  
+    !    
     ! Standard:
     !    Fortran 95 and later
     integer, real, complex or logical :: MATRIX_A(:[,:]), MATRIX_B(:[,:])

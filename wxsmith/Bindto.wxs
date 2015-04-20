@@ -78,22 +78,11 @@
 											<border>5</border>
 										</object>
 										<object class="sizeritem">
-											<object class="wxStaticText" name="wxID_ANY" variable="StaticText6" member="no">
-												<label> Note: $procname$ is changed to the original name of procedure;</label>
+											<object class="wxStaticText" name="ID_STATICTEXT5" variable="StaticText16" member="yes">
+												<label>Note: $procname$ is changed to the original name of procedure;&#x0A;         $modulename$ is changed to the name of module;&#x0A;         $modname$ is changed to the truncated name of module.</label>
 											</object>
-											<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
-										</object>
-										<object class="sizeritem">
-											<object class="wxStaticText" name="wxID_ANY" variable="StaticText11" member="no">
-												<label>         $modulename$ is changed to the name of module;</label>
-											</object>
-											<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
-										</object>
-										<object class="sizeritem">
-											<object class="wxStaticText" name="wxID_ANY" variable="StaticText8" member="no">
-												<label>         $modname$ is changed to the truncated name of module.</label>
-											</object>
-											<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<border>5</border>
 										</object>
 										<object class="sizeritem">
 											<object class="wxBoxSizer" variable="BoxSizer15" member="no">
@@ -137,6 +126,35 @@
 											<flag>wxTOP|wxBOTTOM|wxALIGN_LEFT|wxALIGN_TOP</flag>
 											<border>5</border>
 										</object>
+										<object class="sizeritem">
+											<object class="wxBoxSizer" variable="BoxSizer17" member="no">
+												<object class="sizeritem">
+													<object class="wxStaticText" name="ID_STATICTEXT1" variable="StaticText7" member="yes">
+														<label>Output dir:</label>
+													</object>
+													<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+													<border>5</border>
+												</object>
+												<object class="sizeritem">
+													<object class="wxTextCtrl" name="ID_TEXTCTRL7" variable="tc_OutputDir" member="yes">
+														<value>Text</value>
+													</object>
+													<flag>wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+													<border>5</border>
+													<option>1</option>
+												</object>
+												<object class="sizeritem">
+													<object class="wxButton" name="ID_BUTTON1" variable="bt_OutputDir" member="yes">
+														<label>...</label>
+														<style>wxBU_EXACTFIT</style>
+														<handler function="Onbt_OutputDirClick" entry="EVT_BUTTON" />
+													</object>
+													<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+													<border>5</border>
+												</object>
+											</object>
+											<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+										</object>
 									</object>
 								</object>
 								<label>General</label>
@@ -174,6 +192,15 @@
 																<handler function="OnAdd" entry="EVT_BUTTON" />
 															</object>
 															<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+															<border>5</border>
+														</object>
+														<object class="sizeritem">
+															<object class="wxButton" name="ID_BUTTON_COPY" variable="bt_copy" member="yes">
+																<label>Copy</label>
+																<tooltip>Copy selected type to a new one</tooltip>
+																<handler function="OnCopy" entry="EVT_BUTTON" />
+															</object>
+															<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
 															<border>5</border>
 														</object>
 														<object class="sizeritem">
@@ -372,6 +399,81 @@
 									</object>
 								</object>
 								<label>Destructor</label>
+							</object>
+							<object class="notebookpage">
+								<object class="wxPanel" name="ID_PANEL5" variable="Panel5" member="yes">
+									<object class="wxBoxSizer" variable="BoxSizer18" member="no">
+										<orient>wxVERTICAL</orient>
+										<object class="sizeritem">
+											<object class="wxStaticText" name="wxID_ANY" variable="StaticText13" member="no">
+												<label>This tool can generate Cython code which wraps Fortran. Generated *.pyx file&#x0A; can later be compiled into an extention module for the Python language.</label>
+											</object>
+											<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<border>5</border>
+										</object>
+										<object class="sizeritem">
+											<object class="wxCheckBox" name="ID_CHECKBOX6" variable="cb_genCython" member="yes">
+												<label>Generate Cython *.pyx file</label>
+												<handler function="Oncb_genCythonClick" entry="EVT_CHECKBOX" />
+											</object>
+											<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<border>5</border>
+										</object>
+										<object class="sizeritem">
+											<object class="wxPanel" name="ID_PANEL6" variable="pn_pyOpts" member="yes">
+												<object class="wxBoxSizer" variable="BoxSizer20" member="no">
+													<orient>wxVERTICAL</orient>
+													<object class="sizeritem">
+														<object class="wxBoxSizer" variable="BoxSizer19" member="no">
+															<object class="sizeritem">
+																<object class="wxStaticText" name="wxID_ANY" variable="StaticText14" member="no">
+																	<label>Python function names:</label>
+																</object>
+																<flag>wxTOP|wxBOTTOM|wxRIGHT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+																<border>5</border>
+															</object>
+															<object class="sizeritem">
+																<object class="wxTextCtrl" name="ID_TEXTCTRL8" variable="tc_pyFunName" member="yes">
+																	<value>Text</value>
+																</object>
+																<flag>wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+																<border>5</border>
+																<option>1</option>
+															</object>
+														</object>
+														<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+														<border>5</border>
+													</object>
+													<object class="sizeritem">
+														<object class="wxStaticText" name="wxID_ANY" variable="StaticText15" member="no">
+															<label>Note: $procname$ is changed to the original name of procedure;&#x0A;         $modulename$ is changed to the name of module;&#x0A;         $modname$ is changed to the truncated name of module.</label>
+														</object>
+														<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+														<border>5</border>
+													</object>
+													<object class="sizeritem">
+														<object class="wxCheckBox" name="ID_CHECKBOX7" variable="cb_pyGenClass" member="yes">
+															<label>Generate Python class from Fortran module</label>
+														</object>
+														<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+														<border>5</border>
+													</object>
+													<object class="sizeritem">
+														<object class="wxCheckBox" name="ID_CHECKBOX8" variable="cb_pyFirstSelf" member="yes">
+															<label>Use first argument of the derived type as &apos;self&apos; in Python</label>
+														</object>
+														<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+														<border>5</border>
+													</object>
+												</object>
+											</object>
+											<flag>wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+											<border>5</border>
+											<option>1</option>
+										</object>
+									</object>
+								</object>
+								<label>Python</label>
 							</object>
 						</object>
 						<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
