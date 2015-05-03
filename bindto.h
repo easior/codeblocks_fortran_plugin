@@ -137,9 +137,12 @@ class Bindto: public wxDialog
 		struct TypeBind
 		{
 		    wxString fType;
+		    wxString fTypeOnly;
 		    wxString bType;
+		    wxString bDim;
 		    wxString cType;
 		    wxString cDim;
+		    wxString info;
 		};
 
 		struct TypePyx
@@ -150,6 +153,7 @@ class Bindto: public wxDialog
 		    wxString fDrvTypeName;
 		    wxString initStr;
 		    bool hide;
+		    int ndim;
 		};
 
 		ParserF* m_pParser;
@@ -168,6 +172,9 @@ class Bindto: public wxDialog
         wxString m_InitialOutputDirFile;
         wxString m_InitialOutputDirProj;
         wxString m_OutputDir;
+        bool m_LogToInt;
+        TypeMap m_GlobLogFunMap;
+        StrSet  m_LogTypeSet;
 
         bool m_UseOneGlobalFile;
         wxString m_GlobProceduresFile;
@@ -177,8 +184,6 @@ class Bindto: public wxDialog
         bool m_GlobWriteStrFtoC;
         bool m_GlobWriteStrCtoF;
         bool m_GlobWriteStrLen;
-        bool m_GlobWriteIntToLog;
-        bool m_GlobWriteLogToInt;
         wxString m_WarnMessage;
         StrSet m_NotFoundTypes;
         wxString m_CStructs;
@@ -187,8 +192,6 @@ class Bindto: public wxDialog
         bool m_WriteStrFtoC;
         bool m_WriteStrCtoF;
         bool m_WriteStrLen;
-        bool m_WriteIntToLog;
-        bool m_WriteLogToInt;
         StrSet m_DefinedTypes;
         StrSet m_NoArgConstructors;
         StrMap m_Deallocators;
@@ -231,16 +234,17 @@ class Bindto: public wxDialog
         void GetSubStrFtoC(wxArrayString& strFtoC);
         void GetSubStrCtoF(wxArrayString& strCtoF);
         void GetFunStrLen(wxArrayString& strLen);
-        void GetFunIntToLog(wxArrayString& strArr);
-        void GetFunLogToInt(wxArrayString& strArr);
+        void GetFunLogical(const wxString& logType, const wxString& nameLtoI, const wxString& nameItoL, wxArrayString& funLtoI, wxArrayString& funItoL);
         wxString GetHelperModule(bool useGlobal = false);
-        void PrepareAssumedShapeVariables(wxString& txtBindSecond, const wxArrayString& argArr, const wxArrayString& dimVarNames,
+        void PrepareAssumedShapeVariables(const wxArrayString& argArr, const wxArrayString& dimVarNames,
                                           wxArrayString& additionalDeclar, wxArrayString& addVarNames, wxArrayString& addVarNamesC,
                                           const wxArrayString& varNamesOfDim, const StrSet& argHideSetPy, wxArrayString& additionalDeclarPy,
                                           wxArrayString& addVarNamesPy, wxArrayString& addArgNamesPy);
-        void AddDimVariables(const wxArrayString& argArr, wxArrayString& dimVarNames, int nDimVarAdd, wxString varFirstPart, const wxString& argName, wxArrayString& varNamesOfDim);
+        void AddDimVariables(const wxArrayString& argArr, wxArrayString& dimVarNames, int nDimVarAdd, wxString varFirstPart, const wxString& argName,
+                             wxArrayString& varNamesOfDim, TypeBind& tys);
         void HideAssumedShape(const wxString& vdim, wxString& vdimHid, int& nAssumedDim);
-        void AddDimVariablesFromDoc(wxArrayString& dimVarNames, int& nDimVarAdd, const wxString& docString, const wxString& argName, wxArrayString& varNamesOfDim);
+        void AddDimVariablesFromDoc(wxArrayString& dimVarNames, int& nDimVarAdd, const wxString& docString, const wxString& argName,
+                                    wxArrayString& varNamesOfDim, TypeBind& tys);
         wxString GetCName(const wxString& procName, const wxString& moduleName);
         wxString GetProcName(const wxString& procName, const wxString& moduleName, const wxString& nameFrame);
         void AddConstructors(wxString& txtBind, wxString& txtHeadersMod, wxString& txtCythonCtor, wxString& txtCythonFirst, const wxString& moduleName);
@@ -256,6 +260,7 @@ class Bindto: public wxDialog
         bool VlidatePyFuncName();
         void ShowNewTypeDlg(BindtoNewType& addNewType);
         void PrepateTypes(wxString& ft, wxString& bt, wxString& ct);
+        wxArrayString GetLogFunNames(const wxString& fType);
 
 		DECLARE_EVENT_TABLE()
 };

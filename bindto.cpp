@@ -60,6 +60,7 @@ BEGIN_EVENT_TABLE(Bindto,wxDialog)
 END_EVENT_TABLE()
 
 wxString DIM_VAR_KEY = _T("<<@%%@>>");
+wxString DIM_VAR_KEY2 = _T("&&@%%@&&");
 wxString PROCNAME_KEY = _T("$procname$");
 wxString MODULENAME_KEY = _T("$modulename$");
 wxString MODNAME_KEY = _T("$modname$");
@@ -425,6 +426,8 @@ void Bindto::FillC2NumpyTypesMap()
     m_C2NumpyTypes[_T("int")] = _T("intc");
     m_C2NumpyTypes[_T("float")] = _T("float32");
     m_C2NumpyTypes[_T("double")] = _T("float64");
+    m_C2NumpyTypes[_T("float complex")] = _T("complex64");
+    m_C2NumpyTypes[_T("double complex")] = _T("complex128");
 }
 
 void Bindto::LoadInitialValues()
@@ -519,10 +522,6 @@ void Bindto::FillTypeMapDefault()
     bTypes.Add(_T("complex(c_long_double_complex)"));
     cTypes.Add(_T("long double complex"));
 
-    fTypes.Add(_T("logical"));
-    bTypes.Add(_T("integer(c_int)"));
-    cTypes.Add(_T("int"));
-
     fTypes.Add(_T("character"));
     bTypes.Add(_T("character(kind=c_char)"));
     cTypes.Add(_T("char"));
@@ -575,6 +574,7 @@ void Bindto::LoadBindToConfig()
     m_CtorEndsWith = cfg->Read(_T("/bind_to/ctor_end"), wxEmptyString);
     m_DtorStartsWith = cfg->Read(_T("/bind_to/dtor_start"), wxEmptyString);
     m_DtorEndsWith = cfg->Read(_T("/bind_to/dtor_end"), wxEmptyString);
+    m_LogToInt = cfg->ReadBool(_T("/bind_to/log_to_int"), true);
 
     m_PyGenCython = cfg->ReadBool(_T("/bind_to/python_generate"), false);
     m_PyCreateClass = cfg->ReadBool(_T("/bind_to/python_class"), false);
@@ -617,6 +617,7 @@ void Bindto::SaveBindToConfig()
     cfg->Write(_T("/bind_to/ctor_end"), m_CtorEndsWith);
     cfg->Write(_T("/bind_to/dtor_start"), m_DtorStartsWith);
     cfg->Write(_T("/bind_to/dtor_end"), m_DtorEndsWith);
+    cfg->Write(_T("/bind_to/log_to_int"), m_LogToInt);
 
     cfg->Write(_T("/bind_to/python_generate"), m_PyGenCython);
     cfg->Write(_T("/bind_to/python_class"), m_PyCreateClass);
@@ -719,8 +720,7 @@ void Bindto::MakeBindTo(BindToIn btin)
         m_GlobProceduresFile = _T("");
         m_GlobProceduresFileH = _T("");
         m_GlobProceduresCInclude.clear();
-        m_GlobWriteIntToLog = false;
-        m_GlobWriteLogToInt = false;
+        m_GlobLogFunMap.clear();
         m_GlobWriteStrCtoF = false;
         m_GlobWriteStrFtoC = false;
         m_GlobWriteStrLen = false;
@@ -855,6 +855,7 @@ void Bindto::MakeBindTo(BindToIn btin)
         cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
         if (!ed)
             return;
+        m_GlobLogFunMap.clear();
         FileBindTo(ed->GetFilename());
     }
 }
@@ -885,8 +886,7 @@ void Bindto::FileBindTo(const wxString& filename)
     m_WriteStrCtoF = false;
     m_WriteStrFtoC = false;
     m_WriteStrLen = false;
-    m_WriteIntToLog = false;
-    m_WriteLogToInt = false;
+    m_LogTypeSet.clear();
     m_Indent   = 0;
     m_PyIndent = 0;
     wxFileName fn(fileToken->m_Filename);
@@ -1087,10 +1087,6 @@ void Bindto::FileBindTo(const wxString& filename)
             }
         }
 
-        if (!m_GlobWriteIntToLog)
-            m_GlobWriteIntToLog = m_WriteIntToLog;
-        if (!m_GlobWriteLogToInt)
-            m_GlobWriteLogToInt = m_WriteLogToInt;
         if (!m_GlobWriteStrCtoF)
             m_GlobWriteStrCtoF = m_WriteStrCtoF;
         if (!m_GlobWriteStrFtoC)
@@ -1204,7 +1200,7 @@ wxString Bindto::CheckOverwriteFilename(wxFileName &fname)
            << _("\n\nAre you sure that you want to OVERWRITE the file?\n\n")
            << _("(If you answer 'No' the existing file will be kept.)");
         int answ = cbMessageBox(query_overwrite, _("Confirmation"),
-                         wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT);
+                         wxICON_QUESTION | wxYES_NO | wxCANCEL | wxNO_DEFAULT);
         if (answ == wxID_NO)
         {
             bool n_changed = false;
@@ -1276,6 +1272,7 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
     wxString txtCythonSecond2;
     wxString txtCythonSecond3;
     wxArrayString additionalDeclarPy;
+    wxArrayString additionalCallPy2;
     StrSet argHideSetPy;
     wxArrayString pyLines;
     bool nowIsPyConstructor = false;
@@ -1344,12 +1341,12 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
             additionalCalls2.Add(funResVar + _T(" = c_loc(") + fName + _T(")"));
             funResVar = fName;
         }
-        else if (tys.fType.StartsWith(_T("logical")) && tys.bType.StartsWith(_T("integer")))
+        else if (tys.fType.StartsWith(_T("logical")) && tys.info.IsSameAs(_T("add_log2int")))
         {
+            wxArrayString logFunNames = GetLogFunNames(tys.fTypeOnly);
             additionalDeclar.Add(funTypeDec + _T(" :: ") + funResVar + _T("_f"));
-            additionalCalls2.Add(funResVar + _T(" = log_to_int(") + funResVar + _T("_f)"));
+            additionalCalls2.Add(funResVar + _T(" = ") + logFunNames[0] + _T("(") + funResVar + _T("_f)"));
             changedNamesMap[funResVar] = funResVar + _T("_f");
-            m_WriteLogToInt = true;
         }
 
         wxString pyVarName = token->m_Name + _T("_res");
@@ -1471,9 +1468,9 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
             int nDimVarAdd;
             TypeBind tys = GetBindType(argToken, nDimVarAdd);
             if (nDimVarAdd > 0)
-                AddDimVariablesFromDoc(dimVarNames, nDimVarAdd, argToken->m_DocString, argToken->m_Name, varNamesOfDim);
+                AddDimVariablesFromDoc(dimVarNames, nDimVarAdd, argToken->m_DocString, argToken->m_Name, varNamesOfDim, tys);
             if (nDimVarAdd > 0)
-                AddDimVariables(argArr, dimVarNames, nDimVarAdd, _T("m"), argToken->m_Name, varNamesOfDim);
+                AddDimVariables(argArr, dimVarNames, nDimVarAdd, _T("m"), argToken->m_Name, varNamesOfDim, tys);
 
             if (!tys.fType.StartsWith(_T("type(c_ptr)")) && tys.bType.StartsWith(_T("type(c_ptr)")))
             {
@@ -1496,13 +1493,14 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
                 {
                     wxString fDecHid;
                     int nAD;
+                    TypeBind tys_tmp;
                     HideAssumedShape(fDec, fDecHid, nAD);
                     if (nAD > 0)
                     {
                         size_t nVNini = dimVarNamesFP.size();
-                        AddDimVariablesFromDoc(dimVarNamesFP, nAD, argToken->m_DocString, argToken->m_Name, varNamesOfDimFP);
+                        AddDimVariablesFromDoc(dimVarNamesFP, nAD, argToken->m_DocString, argToken->m_Name, varNamesOfDimFP, tys_tmp);
                         if (nAD > 0)
-                            AddDimVariables(argArr, dimVarNamesFP, nAD, _T("mdt"), argToken->m_Name, varNamesOfDimFP);
+                            AddDimVariables(argArr, dimVarNamesFP, nAD, _T("mdt"), argToken->m_Name, varNamesOfDimFP, tys_tmp);
 
                         wxString varShape = _T(", [");
                         for (size_t ivn = nVNini; ivn<dimVarNamesFP.size(); ivn++)
@@ -1536,12 +1534,12 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
             {
                 //character(len=:), allocatable :: fname_f
 
-                if (tys.fType.Find(_T("len=*")) != wxNOT_FOUND)
+                wxString fDec = tys.fType;
+                fDec.Replace(_T(", intent(in)"),_T(""));
+                fDec.Replace(_T(", intent(out)"),_T(""));
+                fDec.Replace(_T(", intent(inout)"),_T(""));
+                if (fDec.Find(_T("len=*")) != wxNOT_FOUND)
                 {
-                    wxString fDec = tys.fType;
-                    fDec.Replace(_T(", intent(in)"),_T(""));
-                    fDec.Replace(_T(", intent(out)"),_T(""));
-                    fDec.Replace(_T(", intent(inout)"),_T(""));
                     wxString str = fDec + _T(", allocatable :: ") + argToken->m_Name + _T("_f");
                     str.Replace(_T("len=*"), _T("len=:"));
                     additionalDeclar.Add(str);
@@ -1555,7 +1553,7 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
                     m_WriteStrLen = true;
                 }
                 else
-                    additionalDeclar.Add(tys.fType + _T(" :: ") + argToken->m_Name + _T("_f") + argToken->m_Args.Lower());
+                    additionalDeclar.Add(fDec + _T(" :: ") + argToken->m_Name + _T("_f") + argToken->m_Args.Lower());
                 if (tys.fType.Find(_T("intent(out)")) == wxNOT_FOUND)
                 {
                     additionalCalls.Add(_T("call string_copy_c_f(") + argToken->m_Name + _T(", ") + argToken->m_Name + _T("_f)"));
@@ -1568,34 +1566,20 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
                 }
                 changedNamesMap[argToken->m_Name] = argToken->m_Name + _T("_f");
             }
-            else if (tys.fType.StartsWith(_T("logical")) && tys.bType.StartsWith(_T("integer")))
+            else if (tys.fType.StartsWith(_T("logical")) && tys.info.IsSameAs(_T("add_log2int")))
             {
-                wxString fDec = tys.fType;
-                fDec.Replace(_T(", intent(in)"),_T(""));
-                fDec.Replace(_T(", intent(out)"),_T(""));
-                fDec.Replace(_T(", intent(inout)"),_T(""));
+                wxString fDec = tys.fTypeOnly;
                 wxString bvName = argToken->m_Name + _T("_f");
-                wxString fDecHid;
-                int nAD;
-                HideAssumedShape(fDec, fDecHid, nAD);
-                if (nAD > 0)
-                {
-                    AddDimVariablesFromDoc(dimVarNames, nAD, argToken->m_DocString, argToken->m_Name, varNamesOfDim);
-                    if (nAD > 0)
-                        AddDimVariables(argArr, dimVarNames, nAD, _T("mdt"), argToken->m_Name, varNamesOfDim);
-                }
+                wxString dims;
+                if (!tys.bDim.IsEmpty())
+                    dims = _T(", dimension") + tys.bDim;
 
-                additionalDeclar.Add(fDec + _T(" :: ") + bvName);
+                additionalDeclar.Add(fDec + dims + _T(" :: ") + bvName);
+                wxArrayString logFunNames = GetLogFunNames(tys.fTypeOnly);
                 if (tys.fType.Find(_T("intent(out)")) == wxNOT_FOUND)
-                {
-                    additionalCalls.Add(bvName + _T(" = int_to_log(") + argToken->m_Name + _T(")"));
-                    m_WriteIntToLog = true;
-                }
+                    additionalCalls.Add(bvName + _T(" = ") + logFunNames[1] + _T("(") + argToken->m_Name + _T(")"));
                 if (tys.fType.Find(_T("intent(in)")) == wxNOT_FOUND)
-                {
-                    additionalCalls2.Add(argToken->m_Name + _T(" = log_to_int(") + bvName + _T(")"));
-                    m_WriteLogToInt = true;
-                }
+                    additionalCalls2.Add(argToken->m_Name + _T(" = ") + logFunNames[0] + _T("(") + bvName + _T(")"));
                 changedNamesMap[argToken->m_Name] = bvName;
             }
             txtBindSecond << GetIS() << tys.bType << _T(" :: ") << argToken->m_Name;
@@ -1605,16 +1589,97 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
             TypePyx tyaPy = GetBindTypePy(tys);
             if (tyaPy.fDrvTypeName.IsEmpty())
             {
-                if (tyaPy.hide)
+                if (tys.fType.StartsWith(_T("logical")) && tys.info.IsSameAs(_T("add_log2int")))
                 {
-                    additionalDeclarPy.Add(_T("cdef ") + tyaPy.declarPyxFirst + _T(" ") + argToken->m_Name + tyaPy.initStr);
-                    if (txtCythonSecond.EndsWith(_T(", ")))
-                        txtCythonSecond.Truncate(txtCythonSecond.size()-2);
-                    argHideSetPy.insert(argToken->m_Name);
+                    wxString intname = _T("int_") + argToken->m_Name;
+                    if (tyaPy.hide)
+                    {
+                        additionalDeclarPy.Add(_T("cdef ") + tyaPy.declarPyxFirst + intname + tyaPy.initStr);
+                        if (txtCythonSecond.EndsWith(_T(", ")))
+                            txtCythonSecond.Truncate(txtCythonSecond.size()-2);
+                        argHideSetPy.insert(argToken->m_Name);
+                        wxString declOut = tyaPy.declarPyxFirst;
+
+                        if (declOut.StartsWith(_T("np.ndarray")))
+                        {
+                            declOut.Replace(_T("int"), _T("np.uint8_t"));
+                            declOut.Replace(_T("]"), _T(",cast=True]"));
+                            wxString strDecl = _T("cdef ") + declOut + _T(" ") + argToken->m_Name + _T(" = np.empty([");
+                            for (int nd=0; nd<tyaPy.ndim; nd++)
+                            {
+                                strDecl << wxString::Format(intname + _T(".shape[%d],"), nd);
+                            }
+                            strDecl << _T("], dtype=np.bool)");
+                            additionalCallPy2.Add(strDecl);
+                            additionalCallPy2.Add(argToken->m_Name + _T("[...] = ") + intname);
+                        }
+                        else
+                        {
+                            declOut.Replace(_T("int"), _T("bint"));
+                            additionalCallPy2.Add(_T("cdef ") + declOut + _T(" ") + argToken->m_Name + _T(" = ") + intname);
+                        }
+                    }
+                    else
+                    {
+                        wxString declInp = tyaPy.declarPyxFirst;
+                        if (declInp.StartsWith(_T("np.ndarray")))
+                        {
+                            declInp.Replace(_T("int"), _T("np.uint8_t"));
+                            declInp.Replace(_T("]"), _T(",cast=True]"));
+                            txtCythonSecond << declInp << _T(" ") << argToken->m_Name;
+                            wxString strDecl = _T("cdef ") + tyaPy.declarPyxFirst + intname + _T(" = ");
+                            strDecl << _T("np.empty([");
+                            for (int nd=0; nd<tyaPy.ndim; nd++)
+                            {
+                                strDecl << wxString::Format(argToken->m_Name + _T(".shape[%d],"), nd);
+                            }
+                            strDecl << _T("], dtype=np.intc)");
+                            additionalDeclarPy.Add(strDecl);
+                            strDecl = intname + _T("[...] = ") + argToken->m_Name;
+                            additionalDeclarPy.Add(strDecl);
+                            if (!tyaPy.intent.IsEmpty())
+                                additionalCallPy2.Add(argToken->m_Name + _T("[...] = ") + intname);
+                        }
+                        else
+                        {
+                            declInp.Replace(_T("int"), _T("bint"));
+                            txtCythonSecond << declInp << _T(" ") << argToken->m_Name;
+                            additionalDeclarPy.Add(_T("cdef ") + tyaPy.declarPyxFirst + _T(" ") + intname + _T(" = ") + argToken->m_Name);
+                            if (!tyaPy.intent.IsEmpty())
+                                additionalCallPy2.Add(argToken->m_Name + _T(" = ") + intname);
+                        }
+                    }
+                    txtCythonSecond2 << _T("&") << intname << tyaPy.callCSecond;
+                }
+                else if (tyaPy.declarPyxFirst.IsSameAs(_T("char*")))
+                {
+                    if (tyaPy.hide)
+                    {
+                        if (tyaPy.initStr.IsEmpty())
+                            additionalDeclarPy.Add(_T("cdef ") + tyaPy.declarPyxFirst + _T(" ") + argToken->m_Name + tyaPy.initStr);
+                        else
+                            additionalDeclarPy.Add(argToken->m_Name + tyaPy.initStr);
+                        if (txtCythonSecond.EndsWith(_T(", ")))
+                            txtCythonSecond.Truncate(txtCythonSecond.size()-2);
+                        argHideSetPy.insert(argToken->m_Name);
+                    }
+                    else
+                        txtCythonSecond << tyaPy.declarPyxFirst << _T(" ") << argToken->m_Name;
+                    txtCythonSecond2 << argToken->m_Name;
                 }
                 else
-                    txtCythonSecond << tyaPy.declarPyxFirst << _T(" ") << argToken->m_Name;
-                txtCythonSecond2 << _T("&") << argToken->m_Name << tyaPy.callCSecond;
+                {
+                    if (tyaPy.hide)
+                    {
+                        additionalDeclarPy.Add(_T("cdef ") + tyaPy.declarPyxFirst + _T(" ") + argToken->m_Name + tyaPy.initStr);
+                        if (txtCythonSecond.EndsWith(_T(", ")))
+                            txtCythonSecond.Truncate(txtCythonSecond.size()-2);
+                        argHideSetPy.insert(argToken->m_Name);
+                    }
+                    else
+                        txtCythonSecond << tyaPy.declarPyxFirst << _T(" ") << argToken->m_Name;
+                    txtCythonSecond2 << _T("&") << argToken->m_Name << tyaPy.callCSecond;
+                }
             }
             else
             {
@@ -1682,9 +1747,9 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
     wxArrayString addVarNamesPy_tmp;
     StrSet argHideSetPy_tmp;
     wxArrayString addArgNamesPy_tmp;
-    PrepareAssumedShapeVariables(txtBindSecond, argArr, dimVarNames, additionalDeclar, addVarNames, addVarNamesC, varNamesOfDim,
+    PrepareAssumedShapeVariables(argArr, dimVarNames, additionalDeclar, addVarNames, addVarNamesC, varNamesOfDim,
                                  argHideSetPy, additionalDeclarPy, addVarNamesPy, addArgNamesPy);
-    PrepareAssumedShapeVariables(txtBindSecond, argArr, dimVarNamesFP, additionalDeclar, addVarNames, addVarNamesC, varNamesOfDimFP,
+    PrepareAssumedShapeVariables(argArr, dimVarNamesFP, additionalDeclar, addVarNames, addVarNamesC, varNamesOfDimFP,
                                  argHideSetPy_tmp, additionalDeclarPy_tmp, addVarNamesPy_tmp, addArgNamesPy_tmp);
     for (size_t i=0; i<addVarNames.size(); i++)
         txtBindFirst << _T(", ") << addVarNames.Item(i);
@@ -1800,6 +1865,8 @@ void Bindto::BindProcedure(wxString& txtBind, wxString& txtHeaders, wxString& tx
         txtCythonSecond2 << _T(", ") << addVarNamesPy.Item(i);
     txtCythonSecond2 << _T(")\n");
     txtCythonSecond << txtCythonSecond2;
+    for (size_t i=0; i<additionalCallPy2.size(); i++)
+        txtCythonSecond << GetIS(m_PyIndent) << additionalCallPy2.Item(i) << _T("\n");
     if (!txtCythonSecond3.IsEmpty())
         txtCythonSecond << GetIS(m_PyIndent) << _T("return ") << txtCythonSecond3 << _T("\n");
 
@@ -1829,6 +1896,7 @@ Bindto::TypeBind Bindto::GetBindType(TokenF* token, int& nDimVarAdd)
         wxString vDimHid;
         int nAssumedDim;
         HideAssumedShape(vDim, vDimHid, nAssumedDim);
+        retSt.bDim = vDimHid;
         if (retSt.fType.Find(_T("dimension(")) == wxNOT_FOUND)
         {
             int itn = retSt.fType.Find(_T(", intent("));
@@ -1900,7 +1968,10 @@ Bindto::TypeBind Bindto::GetBindType(const wxString& declar, int& nDimVarAdd)
         }
         else if (iKin == wxNOT_FOUND)
         {
-            fCharLen = klstr;
+            if (klstr.IsEmpty())
+                fCharLen = _T("1");
+            else
+                fCharLen = klstr;
         }
         else // (iKin != wxNOT_FOUND)
         {
@@ -1998,7 +2069,15 @@ Bindto::TypeBind Bindto::GetBindType(const wxString& declar, int& nDimVarAdd)
         }
     }
 
-    if (wasNotFound)
+    if (wasNotFound && m_LogToInt && fTypeKind.Item(0).IsSameAs(_T("logical")))
+    {
+        retSt.fType = ftype;
+        retSt.fTypeOnly = ftype;
+        retSt.bType = _T("integer(c_int)");
+        retSt.cType = _T("int");
+        retSt.info = _T("add_log2int");
+    }
+    else if (wasNotFound)
     {
         if (m_NotFoundTypes.count(ftype) == 0)
         {
@@ -2031,7 +2110,8 @@ Bindto::TypeBind Bindto::GetBindType(const wxString& declar, int& nDimVarAdd)
         m_PyInclude.insert(_T("from libc.stdint cimport *"));
     }
     else if (retSt.cType.StartsWith(_T("float complex")) ||
-             retSt.cType.StartsWith(_T("double complex")))
+             retSt.cType.StartsWith(_T("double complex")) ||
+             retSt.cType.StartsWith(_T("long double complex")))
     {
         m_CInclude.insert(_T("#include <complex.h>"));
     }
@@ -2049,6 +2129,7 @@ Bindto::TypeBind Bindto::GetBindType(const wxString& declar, int& nDimVarAdd)
         else
         {
             retSt.bType << _T(", dimension") << vdimHid;
+            retSt.bDim = vdimHid;
             retSt.cDim << GetCDims(vdim);
             nDimVarAdd += nAssumedDim;
         }
@@ -2510,11 +2591,12 @@ void Bindto::GetSubStrFtoC(wxArrayString &strFtoC)
     strFtoC.Add(tab + _T("character(len=*), intent(in) :: f_string"));
     strFtoC.Add(tab + _T("character(len=1,kind=c_char), dimension(*), intent(out) :: c_string(*)"));
     strFtoC.Add(tab + _T("integer :: i, chlen\n"));
+    strFtoC.Add(tab + _T("i = 1"));
     strFtoC.Add(tab + _T("chlen = len(f_string)"));
-    strFtoC.Add(tab + _T("do i = 1, chlen"));
+    strFtoC.Add(tab + _T("do while(c_string(i)/=c_null_char .and. i<=chlen)"));
     strFtoC.Add(tab + tab + _T("c_string(i) = f_string(i:i)"));
+    strFtoC.Add(tab + tab + _T("i = i + 1"));
     strFtoC.Add(tab + _T("end do"));
-    strFtoC.Add(tab + _T("c_string(chlen+1) = c_null_char"));
     strFtoC.Add(_T("end subroutine"));
 }
 
@@ -2551,45 +2633,38 @@ void Bindto::GetFunStrLen(wxArrayString &strLen)
     strLen.Add(_T("end function"));
 }
 
-void Bindto::GetFunIntToLog(wxArrayString &strArr)
+void Bindto::GetFunLogical(const wxString& logType, const wxString& nameLtoI, const wxString& nameItoL, wxArrayString& funLtoI, wxArrayString& funItoL)
 {
     wxString tab;
     tab << GetIS(1);
-    strArr.Add(_T("elemental function int_to_log(int_val)"));
-    strArr.Add(tab + _T("integer(c_int), intent(in) :: int_val"));
-    strArr.Add(tab + _T("logical :: int_to_log\n"));
-    strArr.Add(tab + _T("if (int_val == 0) then"));
-    strArr.Add(tab + tab + _T("int_to_log = .false."));
-    strArr.Add(tab + _T("else"));
-    strArr.Add(tab + tab + _T("int_to_log = .true."));
-    strArr.Add(tab + _T("end if"));
-    strArr.Add(_T("end function"));
-}
+    funLtoI.Add(_T("elemental function ") + nameLtoI + _T("(log_val)"));
+    funLtoI.Add(tab + logType + _T(", intent(in) :: log_val"));
+    funLtoI.Add(tab + _T("integer(c_int) :: ") + nameLtoI + _T("\n"));
+    funLtoI.Add(tab + _T("if (log_val) then"));
+    funLtoI.Add(tab + tab + nameLtoI + _T(" = 1"));
+    funLtoI.Add(tab + _T("else"));
+    funLtoI.Add(tab + tab + nameLtoI + _T(" = 0"));
+    funLtoI.Add(tab + _T("end if"));
+    funLtoI.Add(_T("end function"));
 
-void Bindto::GetFunLogToInt(wxArrayString &strArr)
-{
-    wxString tab;
-    tab << GetIS(1);
-    strArr.Add(_T("elemental function log_to_int(log_val)"));
-    strArr.Add(tab + _T("logical, intent(in) :: log_val"));
-    strArr.Add(tab + _T("integer(c_int) :: log_to_int\n"));
-    strArr.Add(tab + _T("if (log_val) then"));
-    strArr.Add(tab + tab + _T("log_to_int = 1"));
-    strArr.Add(tab + _T("else"));
-    strArr.Add(tab + tab + _T("log_to_int = 0"));
-    strArr.Add(tab + _T("end if"));
-    strArr.Add(_T("end function"));
+    funItoL.Add(_T("elemental function ") + nameItoL + _T("(int_val)"));
+    funItoL.Add(tab + _T("integer(c_int), intent(in) :: int_val"));
+    funItoL.Add(tab + logType + _T(" :: ") + nameItoL + _T("\n"));
+    funItoL.Add(tab + _T("if (int_val == 0) then"));
+    funItoL.Add(tab + tab + nameItoL + _T(" = .false."));
+    funItoL.Add(tab + _T("else"));
+    funItoL.Add(tab + tab + nameItoL + _T(" = .true."));
+    funItoL.Add(tab + _T("end if"));
+    funItoL.Add(_T("end function"));
 }
 
 wxString Bindto::GetHelperModule(bool useGlobal)
 {
     wxString help;
-    if (!useGlobal && !m_WriteStrCtoF && !m_WriteStrFtoC && !m_WriteStrLen &&
-        !m_WriteLogToInt && !m_WriteIntToLog)
+    if (!useGlobal && !m_WriteStrCtoF && !m_WriteStrFtoC && !m_WriteStrLen && m_LogTypeSet.empty())
         return wxEmptyString;
 
-    if (useGlobal && !m_GlobWriteStrCtoF && !m_GlobWriteStrFtoC && !m_GlobWriteStrLen &&
-        !m_GlobWriteLogToInt && !m_GlobWriteIntToLog)
+    if (useGlobal && !m_GlobWriteStrCtoF && !m_GlobWriteStrFtoC && !m_GlobWriteStrLen && m_GlobLogFunMap.empty())
         return wxEmptyString;
 
     wxString tab;
@@ -2622,27 +2697,44 @@ wxString Bindto::GetHelperModule(bool useGlobal)
         for (size_t i=0;i<strFtoC.size();i++)
             help << tab << strFtoC.Item(i) << _T("\n");
     }
-    if ((!useGlobal && m_WriteLogToInt) || (useGlobal && m_GlobWriteLogToInt))
+    if (!useGlobal && !m_LogTypeSet.empty())
     {
-        help << _T("\n");
-        wxArrayString strArr;
-        GetFunLogToInt(strArr);
-        for (size_t i=0;i<strArr.size();i++)
-            help << tab << strArr.Item(i) << _T("\n");
+        for (StrSet::iterator it=m_LogTypeSet.begin(); it != m_LogTypeSet.end(); ++it)
+        {
+            if (m_GlobLogFunMap.count(*it) == 0)
+                continue;
+            wxArrayString funLtoI;
+            wxArrayString funItoL;
+            GetFunLogical(*it, m_GlobLogFunMap[*it][0], m_GlobLogFunMap[*it][1], funLtoI, funItoL);
+            help << _T("\n");
+            for (size_t i=0;i<funLtoI.size();i++)
+                help << tab << funLtoI.Item(i) << _T("\n");
+            help << _T("\n");
+            for (size_t i=0;i<funItoL.size();i++)
+                help << tab << funItoL.Item(i) << _T("\n");
+        }
     }
-    if ((!useGlobal && m_WriteIntToLog) || (useGlobal && m_GlobWriteIntToLog))
+    if (useGlobal && !m_GlobLogFunMap.empty())
     {
-        help << _T("\n");
-        wxArrayString strArr;
-        GetFunIntToLog(strArr);
-        for (size_t i=0;i<strArr.size();i++)
-            help << tab << strArr.Item(i) << _T("\n");
+        for (TypeMap::iterator it=m_GlobLogFunMap.begin(); it != m_GlobLogFunMap.end(); ++it)
+        {
+            wxArrayString fnams = it->second;
+            wxArrayString funLtoI;
+            wxArrayString funItoL;
+            GetFunLogical(it->first, fnams[0], fnams[1], funLtoI, funItoL);
+            help << _T("\n");
+            for (size_t i=0;i<funLtoI.size();i++)
+                help << tab << funLtoI.Item(i) << _T("\n");
+            help << _T("\n");
+            for (size_t i=0;i<funItoL.size();i++)
+                help << tab << funItoL.Item(i) << _T("\n");
+        }
     }
     help << _T("end module\n");
     return help;
 }
 
-void Bindto::PrepareAssumedShapeVariables(wxString& txtBindSecond, const wxArrayString& argArr, const wxArrayString& dimVarNames,
+void Bindto::PrepareAssumedShapeVariables(const wxArrayString& argArr, const wxArrayString& dimVarNames,
                                           wxArrayString& additionalDeclar, wxArrayString& addVarNames, wxArrayString& addVarNamesC,
                                           const wxArrayString& varNamesOfDim, const StrSet& argHideSetPy,
                                           wxArrayString& additionalDeclarPy, wxArrayString& addVarNamesPy, wxArrayString& addArgNamesPy)
@@ -2688,7 +2780,6 @@ void Bindto::PrepareAssumedShapeVariables(wxString& txtBindSecond, const wxArray
         varNameOld = varNamesOfDim.Item(i);
 
         wxString var = dimVarNames.Item(i);
-        txtBindSecond.Replace(DIM_VAR_KEY, var, false);
         if (argArr.Index(var) == wxNOT_FOUND && addVarNames.Index(var) == wxNOT_FOUND)
         {
             additionalDeclar.Add(_T("integer(c_int), intent(in) :: ") + var);
@@ -2716,7 +2807,7 @@ void Bindto::PrepareAssumedShapeVariables(wxString& txtBindSecond, const wxArray
 }
 
 void Bindto::AddDimVariables(const wxArrayString& argArr, wxArrayString& dimVarNames, int nDimVarAdd, wxString varFirstPart,
-                             const wxString& argName, wxArrayString& varNamesOfDim)
+                             const wxString& argName, wxArrayString& varNamesOfDim, TypeBind& tys)
 {
     wxString n1 = varFirstPart + _T("%i");
     wxString vname;
@@ -2731,8 +2822,10 @@ void Bindto::AddDimVariables(const wxArrayString& argArr, wxArrayString& dimVarN
                 vname = vn1;
         }
         dimVarNames.Add(vname);
-        vname = wxEmptyString;
         varNamesOfDim.Add(argName);
+        tys.bDim.Replace(DIM_VAR_KEY,vname,false);
+        tys.bType.Replace(DIM_VAR_KEY,vname,false);
+        vname = wxEmptyString;
     }
 }
 
@@ -2743,7 +2836,7 @@ void Bindto::HideAssumedShape(const wxString& vdim, wxString& vdimHid, int& nAss
 }
 
 void Bindto::AddDimVariablesFromDoc(wxArrayString& dimVarNames, int& nDimVarAdd,  const wxString& docString,
-                                    const wxString& argName, wxArrayString& varNamesOfDim)
+                                    const wxString& argName, wxArrayString& varNamesOfDim, TypeBind& tys)
 {
     // Get dimensions of allocatable array from doc string e.g. dimension(m,n)
     if (nDimVarAdd == 0)
@@ -2774,6 +2867,11 @@ void Bindto::AddDimVariablesFromDoc(wxArrayString& dimVarNames, int& nDimVarAdd,
     {
         dimVarNames.Add(dimArr.Item(i));
         varNamesOfDim.Add(argName);
+    }
+    for (size_t i=0; i<dimArr.size(); i++)
+    {
+        tys.bDim.Replace(DIM_VAR_KEY,dimArr.Item(i),false);
+        tys.bType.Replace(DIM_VAR_KEY,dimArr.Item(i),false);
     }
     nDimVarAdd = 0;
 }
@@ -3057,8 +3155,10 @@ Bindto::TypePyx Bindto::GetBindTypePy(const TypeBind& tya)
 {
     TypePyx tyaPy;
     tyaPy.hide = false;
+    tyaPy.ndim = 0;
     wxString fTName;
     wxString decPyx;
+
     if (tya.cType.EndsWith(_T("*")))
         decPyx = tya.cType.Mid(0,tya.cType.size()-1);
     if (decPyx.IsSameAs(_T("void*")) || decPyx.IsSameAs(_T("void")))
@@ -3088,7 +3188,7 @@ Bindto::TypePyx Bindto::GetBindTypePy(const TypeBind& tya)
 
     idx = tya.bType.Find(_T("dimension("));
     size_t ndim = 0;
-    if (idx != wxNOT_FOUND)
+    if (idx != wxNOT_FOUND && !tya.bType.StartsWith(_T("character")))
     {
         wxString dims = GetToken(tya.bType,idx+9);
         if (tyaPy.intent.IsSameAs(_T("out")) && dims.Find(_T("*")) == wxNOT_FOUND)
@@ -3100,6 +3200,8 @@ Bindto::TypePyx Bindto::GetBindTypePy(const TypeBind& tya)
                 wxString d1str = tkz.GetNextToken();
                 if (d1str.IsSameAs(DIM_VAR_KEY))
                     d1str << wxString::Format(_T("%d"),dimsArr.size());
+                else if (d1str.StartsWith(DIM_VAR_KEY2))
+                    d1str = DIM_VAR_KEY + wxString::Format(_T("%d"),dimsArr.size());
                 dimsArr.Insert(d1str,0);
             }
 
@@ -3126,6 +3228,21 @@ Bindto::TypePyx Bindto::GetBindTypePy(const TypeBind& tya)
         }
     }
     tyaPy.declarPyxFirst = decPyx;
+    if (tya.cType.IsSameAs(_T("char")) || tya.cType.IsSameAs(_T("char*")))
+    {
+        tyaPy.declarPyxFirst = _T("char*");
+        if (tyaPy.hide && !tya.cDim.IsEmpty())
+        {
+            wxString dimstr = tya.cDim.Mid(1,tya.cDim.size()-2);
+            long dl;
+            if (dimstr.ToLong(&dl))
+                tyaPy.initStr = wxString::Format(_T(" = ' '*%d"),dl-1);
+            else
+                tyaPy.initStr = _T(" = ' '*(") + dimstr + _T("-1)");
+        }
+        else
+            tyaPy.hide = false;
+    }
     if (ndim > 0)
     {
         tyaPy.callCSecond = _T("[");
@@ -3142,6 +3259,7 @@ Bindto::TypePyx Bindto::GetBindTypePy(const TypeBind& tya)
     if (!fTName.IsEmpty())
         tyaPy.fDrvTypeName = fTName;
 
+    tyaPy.ndim = ndim;
     return tyaPy;
 }
 
@@ -3206,6 +3324,52 @@ bool Bindto::VlidatePyFuncName()
         return false;
     }
     return true;
+}
+
+wxArrayString Bindto::GetLogFunNames(const wxString& fType)
+{
+    wxArrayString funNames;
+    if (m_GlobLogFunMap.count(fType) == 0)
+    {
+        wxString addStr;
+        if (fType.IsSameAs(_T("logical")))
+            addStr = _T("");
+        else if (fType.size() > 8)
+        {
+            wxString allStr = fType.Mid(8);
+            allStr.Replace(_T("("),_T(""));
+            allStr.Replace(_T(")"),_T(""));
+            allStr.Replace(_T("*"),_T(""));
+            allStr.Replace(_T("."),_T(""));
+            allStr.Replace(_T("_"),_T(""));
+            for(size_t i=0; i<allStr.size(); i++)
+            {
+                addStr << allStr.GetChar(i);
+                wxString fnam = _T("log") + addStr + _T("_to_int");
+                bool alreadyHave = false;
+                for (TypeMap::iterator it = m_GlobLogFunMap.begin(); it != m_GlobLogFunMap.end(); ++it)
+                {
+                    if (it->second[0].IsSameAs(fnam))
+                    {
+                        alreadyHave = true;
+                        break;
+                    }
+                }
+                if (!alreadyHave)
+                    break;
+            }
+        }
+        m_LogTypeSet.insert(fType);
+        funNames.Add( _T("log") + addStr + _T("_to_int"));
+        funNames.Add( _T("int_to_log") + addStr);
+        m_GlobLogFunMap[fType] = funNames;
+    }
+    else
+    {
+        m_LogTypeSet.insert(fType);
+        return m_GlobLogFunMap[fType];
+    }
+    return funNames;
 }
 
 void Bindto::Onbt_OutputDirClick(wxCommandEvent& event)
