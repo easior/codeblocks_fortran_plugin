@@ -917,37 +917,6 @@ void NativeParserF::GetCallTipsForType(TokenFlat* token, wxString& callTip)
     }
 }
 
-//void NativeParserF::BreakUpInLines(wxString& str, const wxString& original_str, int chars_per_line)
-//{
-//    if (chars_per_line == -1 || original_str.Length() <= (size_t)chars_per_line)
-//    {
-//        str = original_str;
-//        return;
-//    }
-//
-//    // break it up in lines
-//    size_t pos = 0;
-//    size_t copy_start = 0;
-//    int last_comma = -1;
-//    while (pos < original_str.Length())
-//    {
-//        wxChar c = original_str.GetChar(pos);
-//
-//        if      (c == _T(','))
-//            last_comma = pos;
-//
-//        if (pos % chars_per_line == 0 && last_comma != -1)
-//        {
-//            str << original_str.Mid(copy_start, last_comma - copy_start + 1);
-//            str << _T('\n');
-//            copy_start = last_comma + 1;
-//        }
-//        else if (pos == original_str.Length() - 1)
-//            str << original_str.Mid(copy_start); // rest of the string
-//        ++pos;
-//    }
-//}
-
 // set start and end to the calltip highlight region, based on commasWas (calculated in GetCallTips())
 void NativeParserF::GetCallTipHighlight(const wxString& calltip, int commasWas, int& start, int& end)
 {

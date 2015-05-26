@@ -1871,6 +1871,10 @@ void ParserThreadF::GoThroughBody()
         {
             ParseTypeBoundProcedures(token, true, false);
         }
+        else if (tok_low.Matches(_T("!bindto")))
+        {
+        	HandleBindTo();
+        }
         else
         {
             bool needDefault = true;
@@ -2429,4 +2433,12 @@ void ParserThreadF::AddParamDocs(TokenF* pParToken, DocBlock &docs)
             }
         }
     }
+}
+
+void ParserThreadF::HandleBindTo()
+{
+    wxString line = m_Tokens.GetCurrentLine().Trim(true).Trim(false);
+    line = line.Mid(7).Trim(false).Lower();
+    DoAddToken(tkBindTo, wxEmptyString, line.BeforeFirst('!').Trim());
+    m_Tokens.SkipToEOL();
 }

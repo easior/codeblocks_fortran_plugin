@@ -70,6 +70,7 @@ class Tokenizerf
 		wxChar CurrentChar();
 		wxChar NextChar();
 		wxChar PreviousChar();
+		bool IsBindTo();
 	private:
 		bool CharInString(const char ch, const char* chars);
 		wxString m_Filename;

@@ -153,8 +153,19 @@ class Bindto: public wxDialog
 		    wxString fDrvTypeName;
 		    wxString initStr;
 		    bool hide;
+		    bool copy;
 		    int ndim;
+		    wxArrayString addIntArg;
 		};
+
+		struct BintoDirective
+		{
+		    wxString      varName;
+		    wxArrayString dim;
+		    StrSet        intent;
+		    wxString      initStr;
+		};
+		typedef std::map<wxString,BintoDirective> BTDirMap;
 
 		ParserF* m_pParser;
         TokenF*  m_pTokenCurrent;
@@ -200,6 +211,7 @@ class Bindto: public wxDialog
         wxString m_CurModule;
         wxString m_CurFile;
         bool m_InFortranModule;
+        BTDirMap m_BTDirMap;
 
         bool m_PyGenCython;
         StrSet m_PyInclude;
@@ -243,7 +255,7 @@ class Bindto: public wxDialog
         void AddDimVariables(const wxArrayString& argArr, wxArrayString& dimVarNames, int nDimVarAdd, wxString varFirstPart, const wxString& argName,
                              wxArrayString& varNamesOfDim, TypeBind& tys);
         void HideAssumedShape(const wxString& vdim, wxString& vdimHid, int& nAssumedDim);
-        void AddDimVariablesFromDoc(wxArrayString& dimVarNames, int& nDimVarAdd, const wxString& docString, const wxString& argName,
+        void AddDimVariablesFromDoc(wxArrayString& dimVarNames, int& nDimVarAdd, const wxString& argName,
                                     wxArrayString& varNamesOfDim, TypeBind& tys);
         wxString GetCName(const wxString& procName, const wxString& moduleName);
         wxString GetProcName(const wxString& procName, const wxString& moduleName, const wxString& nameFrame);
@@ -253,7 +265,7 @@ class Bindto: public wxDialog
         bool IsConstructor(TokenF* token);
         bool IsDestructor(TokenF* token);
         wxString GetPyName(const wxString& procName, const wxString& moduleName);
-        TypePyx GetBindTypePy(const TypeBind& tya);
+        TypePyx GetBindTypePy(const TypeBind& tya, const wxString& varName);
         wxString CreateCythonFilename(const wxString& filename);
         void GetInitialOutputDir(wxString& initialOutputDirFile, wxString& initialOutputDirProj);
         bool MakeOutputDir();
@@ -261,6 +273,9 @@ class Bindto: public wxDialog
         void ShowNewTypeDlg(BindtoNewType& addNewType);
         void PrepateTypes(wxString& ft, wxString& bt, wxString& ct);
         wxArrayString GetLogFunNames(const wxString& fType);
+        void ParseBindtoDirectives(const TokenF* parentToken);
+        wxArrayString GetDimArr(const wxString& dimStr);
+        void AddPyArgs(const wxArrayString& argArr, wxArrayString& morePyIntArgs, const wxArrayString& addIntArg);
 
 		DECLARE_EVENT_TABLE()
 };

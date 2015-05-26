@@ -380,12 +380,16 @@ bool Tokenizerf::SkipUnwanted()
 	{
 	    while ((CurrentChar() == 'c' || CurrentChar() == 'C' ||CurrentChar() == '*') && m_Column == 1 && m_SourceForm == fsfFixed)
 	    {
+	        if (IsBindTo())
+                return true;
 	        SkipToEOL();
             if (!SkipWhiteSpace())
                 return false;
 	    }
         while (CurrentChar() == '!')
 		{
+		    if (IsBindTo())
+                return true;
 		    SkipToEOL();
             if (!SkipWhiteSpace())
                 return false;
@@ -603,9 +607,14 @@ wxString Tokenizerf::DoGetToken()
     m_LineNumberStart = m_LineNumber;
 
 	int start = m_TokenIndex;
-	wxString m_Str;
+	wxString ret_Str;
 
-	if (isalpha(CurrentChar()) || CurrentChar() == '_' || CurrentChar() == '$' || CurrentChar() == '#')
+	if (IsBindTo())
+    {
+        m_TokenIndex += 8;
+        ret_Str = _T("!bindto");
+    }
+	else if (isalpha(CurrentChar()) || CurrentChar() == '_' || CurrentChar() == '$' || CurrentChar() == '#')
 	{
 		// keywords, identifiers, etc.
 		while (!IsEOF() &&
@@ -616,7 +625,7 @@ wxString Tokenizerf::DoGetToken()
 			MoveToNextChar();
 		if (IsEOF())
 			return wxEmptyString;
-		m_Str = m_Buffer.Mid(start, m_TokenIndex - start);
+		ret_Str = m_Buffer.Mid(start, m_TokenIndex - start);
 	}
 	else if (isdigit(CurrentChar()))
 	{
@@ -625,7 +634,7 @@ wxString Tokenizerf::DoGetToken()
 			MoveToNextChar();
 		if (IsEOF())
 			return wxEmptyString;
-		m_Str = m_Buffer.Mid(start, m_TokenIndex - start);
+		ret_Str = m_Buffer.Mid(start, m_TokenIndex - start);
 	}
 	else if (CurrentChar() == '"' ||
 			CurrentChar() == '\'')
@@ -636,7 +645,7 @@ wxString Tokenizerf::DoGetToken()
 		if (!SkipToChar(match, true))
 			return wxEmptyString;
 		MoveToNextChar(); // skip ending ' or "
-		m_Str = m_Buffer.Mid(start, m_TokenIndex - start);
+		ret_Str = m_Buffer.Mid(start, m_TokenIndex - start);
 	}
 	else if (CurrentChar() == ':')
 	{
@@ -644,19 +653,19 @@ wxString Tokenizerf::DoGetToken()
 		{
 			MoveToNextChar();
 			MoveToNextChar();
-			m_Str = _T("::");
+			ret_Str = _T("::");
 		}
 		else
 		{
 			MoveToNextChar();
-			m_Str = _T(":");
+			ret_Str = _T(":");
 		}
 	}
 	else if (CurrentChar() == '=' && NextChar() == '>')
 	{
         MoveToNextChar();
         MoveToNextChar();
-        m_Str = _T("=>");
+        ret_Str = _T("=>");
 	}
 	else if (CurrentChar() == '(' || CurrentChar() == '[')
 	{
@@ -750,30 +759,30 @@ wxString Tokenizerf::DoGetToken()
 		{
 			if (i < tmp.Length()-1 && tmp.GetChar(i) == ' ' && tmp.GetChar(i + 1) == ' ')
 				continue; // skip excessive spaces
-			m_Str << tmp.GetChar(i);
+			ret_Str << tmp.GetChar(i);
 		}
 		if (chBlock == '(')
         {
-            m_Str << _T(')'); // add closing parenthesis (see "i < tmp.Length() - 1" in previous "for")
-            m_Str.Replace(_T("  "), _T(" ")); // replace two-spaces with single-space (introduced if it skipped comments or assignments)
-            m_Str.Replace(_T("( "), _T("("));
-            m_Str.Replace(_T(" )"), _T(")"));
+            ret_Str << _T(')'); // add closing parenthesis (see "i < tmp.Length() - 1" in previous "for")
+            ret_Str.Replace(_T("  "), _T(" ")); // replace two-spaces with single-space (introduced if it skipped comments or assignments)
+            ret_Str.Replace(_T("( "), _T("("));
+            ret_Str.Replace(_T(" )"), _T(")"));
         }
         else
         {
-            m_Str << _T(']'); // add closing parenthesis (see "i < tmp.Length() - 1" in previous "for")
-            m_Str.Replace(_T("  "), _T(" ")); // replace two-spaces with single-space (introduced if it skipped comments or assignments)
-            m_Str.Replace(_T("[ "), _T("["));
-            m_Str.Replace(_T(" ]"), _T("]"));
+            ret_Str << _T(']'); // add closing parenthesis (see "i < tmp.Length() - 1" in previous "for")
+            ret_Str.Replace(_T("  "), _T(" ")); // replace two-spaces with single-space (introduced if it skipped comments or assignments)
+            ret_Str.Replace(_T("[ "), _T("["));
+            ret_Str.Replace(_T(" ]"), _T("]"));
         }
 	}
 	else
 	{
-		m_Str = CurrentChar();
+		ret_Str = CurrentChar();
 		MoveToNextChar();
 	}
 
-	return m_Str;
+	return ret_Str;
 }
 
 
@@ -1013,8 +1022,8 @@ void Tokenizerf::SetFilename(const wxString& filename)
 
 wxString Tokenizerf::GetLine(unsigned int nl)
 {
-    // get line nl. Note, line numbers starts from 1.
-    if (nl == 0 && nl > m_LineStartIdx.size())
+    // get line nl. Note: line numbers starts from 1.
+    if (nl == 0 || nl > m_LineStartIdx.size())
         return wxEmptyString;
 
     unsigned int endIndex;
@@ -1025,4 +1034,23 @@ wxString Tokenizerf::GetLine(unsigned int nl)
 
     wxString linenl = m_Buffer.Mid(m_LineStartIdx[nl-1], endIndex - m_LineStartIdx[nl-1]);
     return linenl;
+}
+
+bool Tokenizerf::IsBindTo()
+{
+	if (CurrentChar() == '!' ||
+        ((CurrentChar() == 'c' || CurrentChar() == 'C' || CurrentChar() == '*') && m_Column == 1 && m_SourceForm == fsfFixed))
+	{
+	    if (m_TokenIndex + 7 >= m_BufferLen)
+            return false;
+
+	    wxString str = m_Buffer.Mid(m_TokenIndex+1,6);
+	    if (str.IsSameAs(_T("bindto"),false))
+        {
+            unsigned int idx = m_TokenIndex + 7;
+            if (m_Buffer.GetChar(idx) == ' ' || m_Buffer.GetChar(idx) == '\t')
+                return true;
+        }
+	}
+	return false;
 }

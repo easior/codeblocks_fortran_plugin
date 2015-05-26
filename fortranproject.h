@@ -90,7 +90,7 @@ class FortranProject : public cbCodeCompletionPlugin
         void OnCleanWorkspaceStarted(CodeBlocksEvent& event);
         void OnGotoDeclaration(wxCommandEvent& event);
         bool GotoToken(TokenFlat* pToken, cbEditor* cured);
-        void OnReparseActiveEditor(CodeBlocksEvent& event);
+        void OnEditorSave(CodeBlocksEvent& event);
         void OnEditorActivated(CodeBlocksEvent& event);
         void OnEditorClose(CodeBlocksEvent& event);
 //        void OnEditorOpen(CodeBlocksEvent& event);

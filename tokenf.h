@@ -52,6 +52,7 @@ enum TokenKindF
     tkSelectTypeChild = 0x400000,
     tkSelectTypeDefault = 0x800000,
     tkProcedureFinal = 0x1000000,
+    tkBindTo = 0x2000000,
 };
 
 enum TokenAccessKind

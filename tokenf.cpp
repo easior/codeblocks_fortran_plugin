@@ -81,6 +81,7 @@ wxString TokenF::GetTokenKindString()
         case tkSelectTypeChild: return _("select type");
         case tkSelectTypeDefault: return _("select type");
         case tkProcedureFinal: return _("final procedure");
+        case tkBindTo: return _("BindTo");
 	}
 	return _("other");
 }

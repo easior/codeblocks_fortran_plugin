@@ -148,7 +148,7 @@ void FortranProject::OnAttach()
     // register event sinks
     Manager* pm = Manager::Get();
 
-    pm->RegisterEventSink(cbEVT_EDITOR_SAVE, new cbEventFunctor<FortranProject, CodeBlocksEvent>(this, &FortranProject::OnReparseActiveEditor));
+    pm->RegisterEventSink(cbEVT_EDITOR_SAVE, new cbEventFunctor<FortranProject, CodeBlocksEvent>(this, &FortranProject::OnEditorSave));
     pm->RegisterEventSink(cbEVT_EDITOR_ACTIVATED, new cbEventFunctor<FortranProject, CodeBlocksEvent>(this, &FortranProject::OnEditorActivated));
     pm->RegisterEventSink(cbEVT_EDITOR_CLOSE, new cbEventFunctor<FortranProject, CodeBlocksEvent>(this, &FortranProject::OnEditorClose));
 
@@ -305,7 +305,7 @@ void FortranProject::OnProjectFileRemoved(CodeBlocksEvent& event)
     event.Skip();
 }
 
-void FortranProject::OnReparseActiveEditor(CodeBlocksEvent& event)
+void FortranProject::OnEditorSave(CodeBlocksEvent& event)
 {
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
@@ -1717,6 +1717,10 @@ void FortranProject::OnTab2Space(wxCommandEvent& event)
 
 void FortranProject::OnBindTo(wxCommandEvent& event)
 {
+    cbProject* pr = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (pr)
+        pr->SaveAllFiles();
+
     Bindto bindto(Manager::Get()->GetAppWindow(), m_pNativeParser->GetParser());
     bindto.ShowModal();
 }

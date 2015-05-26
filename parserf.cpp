@@ -2200,10 +2200,6 @@ bool ParserF::FindInfoLogForTypeBoundProc(TokensArrayFlat& tokenPair, bool logCo
         msg << _T("procedure ") << token1->m_DisplayName;
         if (token1->m_IsAbstract)
             msg << _T("(") << token1->m_PartLast << _T(")");
-//        if (!token1->m_Args.IsEmpty())
-//        {
-//            msg << _T("(") << token1->m_Args << _T(")");
-//        }
     }
     else
     {

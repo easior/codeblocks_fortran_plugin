@@ -91,6 +91,7 @@ class ParserThreadF
 		wxString TrimRepetitives(wxString& inStr);
 		wxString GetDocLine(unsigned int ln);
 		void AddParamDocs(TokenF* pParToken, DocBlock &docs);
+		void HandleBindTo();
 
         std::set<wxString> m_KnownEndSecPart;
 };
