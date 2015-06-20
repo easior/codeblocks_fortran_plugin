@@ -18,7 +18,7 @@
 									<object class="wxStaticText" name="ID_STATICTEXT1">
 										<label>View:</label>
 									</object>
-									<flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+									<flag>wxALIGN_CENTER_VERTICAL</flag>
 								</object>
 								<object class="sizeritem">
 									<object class="wxBoxSizer">
@@ -31,7 +31,7 @@
 												</content>
 												<selection>2</selection>
 											</object>
-											<flag>wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxEXPAND</flag>
 											<option>1</option>
 										</object>
 										<object class="sizeritem">
@@ -40,17 +40,17 @@
 												<default>1</default>
 												<tooltip>Make current item visible</tooltip>
 											</object>
-											<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+											<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
 										</object>
 									</object>
-									<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+									<flag>wxALL|wxEXPAND</flag>
 									<option>1</option>
 								</object>
 								<object class="sizeritem">
 									<object class="wxStaticText" name="ID_STATICTEXT2">
 										<label>Search:</label>
 									</object>
-									<flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+									<flag>wxALIGN_CENTER_VERTICAL</flag>
 								</object>
 								<object class="sizeritem">
 									<object class="wxBoxSizer">
@@ -58,32 +58,51 @@
 											<object class="wxComboBox" name="cmbSearchWBF">
 												<style>wxCB_DROPDOWN</style>
 											</object>
-											<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxALL|wxEXPAND</flag>
 											<option>1</option>
 										</object>
 									</object>
-									<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+									<flag>wxALL|wxEXPAND</flag>
 									<option>1</option>
 								</object>
 							</object>
-							<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+							<flag>wxALL|wxEXPAND</flag>
 							<border>4</border>
 						</object>
 						<object class="sizeritem">
 							<object class="wxSplitterWindow" name="splitterWinWBF">
 								<minsize>64</minsize>
 								<style>wxSP_LIVE_UPDATE</style>
-								<object class="wxTreeCtrl" name="treeAllWBF" />
+								<object class="wxTreeCtrl" name="treeAllWBF">
+									<image_list></image_list>
+									<tree_items>
+										<item>TreeCtrl1</item>
+										<item></item>
+									</tree_items>
+									<items_text>
+										<item2>TreeCtrl1</item2>
+										<item2></item2>
+									</items_text>
+								</object>
 								<object class="wxTreeCtrl" name="treeMembersWBF">
+									<image_list></image_list>
+									<tree_items>
+										<item>TreeCtrl2</item>
+										<item></item>
+									</tree_items>
+									<items_text>
+										<item2>TreeCtrl2</item2>
+										<item2></item2>
+									</items_text>
 									<style>wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxTR_HIDE_ROOT</style>
 								</object>
 							</object>
-							<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+							<flag>wxALL|wxEXPAND</flag>
 							<option>1</option>
 						</object>
 					</object>
 				</object>
-				<flag>wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+				<flag>wxEXPAND</flag>
 				<option>1</option>
 			</object>
 		</object>

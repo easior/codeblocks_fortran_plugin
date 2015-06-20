@@ -13,7 +13,7 @@
 									<object class="wxCheckBox" name="chkNoCC">
 										<label>Disable Fortran code-completion</label>
 									</object>
-									<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+									<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
 									<border>8</border>
 								</object>
 								<object class="sizeritem">
@@ -24,28 +24,28 @@
 											<object class="wxCheckBox" name="chkSmartCodeCompletion">
 												<label>Use smart code-completion (makes CC list shorter)</label>
 											</object>
-											<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
 											<border>8</border>
 										</object>
 										<object class="sizeritem">
 											<object class="wxCheckBox" name="chkOnlyUseAssociated">
 												<label>Follow use-assiciation and include-file path</label>
 											</object>
-											<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
 											<border>8</border>
 										</object>
 										<object class="sizeritem">
 											<object class="wxCheckBox" name="chkShowHiddenEntities">
 												<label>Show hidden entities</label>
 											</object>
-											<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
 											<border>8</border>
 										</object>
 										<object class="sizeritem">
 											<object class="wxCheckBox" name="chkShowTypeVariables">
 												<label>Show type of variables</label>
 											</object>
-											<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
 											<border>8</border>
 										</object>
 										<object class="sizeritem">
@@ -57,7 +57,7 @@
 													<object class="wxStaticText" name="ID_STATICTEXT8">
 														<label>Maximum allowed code-completion matches:</label>
 													</object>
-													<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
 												</object>
 												<object class="sizeritem">
 													<object class="wxSpinCtrl" name="spnMaxMatches">
@@ -65,10 +65,10 @@
 														<min>1</min>
 														<max>100000</max>
 													</object>
-													<flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP</flag>
+													<flag>wxALL|wxALIGN_TOP</flag>
 												</object>
 											</object>
-											<flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxALL|wxALIGN_LEFT</flag>
 											<border>8</border>
 										</object>
 										<object class="sizeritem">
@@ -78,67 +78,67 @@
 													<object class="wxCheckBox" name="chkKL_1">
 														<label>1</label>
 													</object>
-													<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkKL_2">
 														<label>2</label>
 													</object>
-													<flag>wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxRIGHT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkKL_3">
 														<label>3</label>
 													</object>
-													<flag>wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxRIGHT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkKL_4">
 														<label>4</label>
 													</object>
-													<flag>wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxRIGHT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkKL_5">
 														<label>5</label>
 													</object>
-													<flag>wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxRIGHT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkKL_6">
 														<label>6</label>
 													</object>
-													<flag>wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxRIGHT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkKL_7">
 														<label>7</label>
 													</object>
-													<flag>wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxRIGHT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkKL_8">
 														<label>8</label>
 													</object>
-													<flag>wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxRIGHT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkKL_9">
 														<label>9</label>
 													</object>
-													<flag>wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxRIGHT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 											</object>
-											<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxALL|wxEXPAND</flag>
 											<border>8</border>
 											<option>1</option>
 										</object>
@@ -154,19 +154,19 @@
 												<default>-1</default>
 												<style>wxRA_SPECIFY_ROWS</style>
 											</object>
-											<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxALL|wxEXPAND</flag>
 											<border>8</border>
 											<option>1</option>
 										</object>
 									</object>
-									<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+									<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
 									<border>8</border>
 								</object>
 								<object class="sizeritem">
 									<object class="wxCheckBox" name="chkCallTipsArrays">
 										<label>Show call-tips for arrays</label>
 									</object>
-									<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+									<flag>wxALL|wxALIGN_LEFT</flag>
 									<border>8</border>
 								</object>
 							</object>
@@ -182,7 +182,7 @@
 									<object class="wxCheckBox" name="chkNoSB">
 										<label>Disable symbols browser</label>
 									</object>
-									<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+									<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
 									<border>8</border>
 								</object>
 								<object class="sizeritem">
@@ -193,14 +193,14 @@
 											<object class="wxCheckBox" name="chkFloatSB">
 												<label>Display as free floating/docking window</label>
 											</object>
-											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT</flag>
 											<border>8</border>
 										</object>
 										<object class="sizeritem">
 											<object class="wxCheckBox" name="chkBottomTree">
 												<label>Display member list in separate tree</label>
 											</object>
-											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT</flag>
 											<border>8</border>
 											<option>1</option>
 										</object>
@@ -208,7 +208,7 @@
 											<object class="wxCheckBox" name="chkSortSB">
 												<label>Sort symbols alphabetically</label>
 											</object>
-											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT</flag>
 											<border>8</border>
 											<option>1</option>
 										</object>
@@ -216,7 +216,7 @@
 											<object class="wxCheckBox" name="chkLocVarSB">
 												<label>Show local variables</label>
 											</object>
-											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT</flag>
 											<border>8</border>
 											<option>1</option>
 										</object>
@@ -224,12 +224,12 @@
 											<object class="wxCheckBox" name="chkInclSepar">
 												<label>Show &apos;include&apos; files separately</label>
 											</object>
-											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT</flag>
 											<border>8</border>
 											<option>1</option>
 										</object>
 									</object>
-									<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+									<flag>wxALL|wxEXPAND</flag>
 									<border>8</border>
 								</object>
 							</object>
@@ -244,7 +244,7 @@
 									<object class="wxCheckBox" name="chkNoFortranInfo">
 										<label>Disable Fortran info tab in Logs window</label>
 									</object>
-									<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+									<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
 									<border>8</border>
 								</object>
 								<object class="sizeritem">
@@ -255,7 +255,7 @@
 											<object class="wxCheckBox" name="chkComAbove">
 												<label>Include comment lines which are above procedure declaration</label>
 											</object>
-											<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<flag>wxALL|wxALIGN_LEFT</flag>
 											<border>5</border>
 											<option>1</option>
 										</object>
@@ -263,7 +263,7 @@
 											<object class="wxCheckBox" name="chkComBelow">
 												<label>Include comment lines which are below procedure declaration</label>
 											</object>
-											<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<flag>wxALL|wxALIGN_LEFT</flag>
 											<border>5</border>
 											<option>1</option>
 										</object>
@@ -271,7 +271,7 @@
 											<object class="wxCheckBox" name="chkDeclarLog">
 												<label>Include declarations of dummy arguments</label>
 											</object>
-											<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<flag>wxALL|wxALIGN_LEFT</flag>
 											<border>5</border>
 											<option>1</option>
 										</object>
@@ -279,12 +279,12 @@
 											<object class="wxCheckBox" name="chkLogComRight">
 												<label>Include comments on the right from variable declarations</label>
 											</object>
-											<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<flag>wxALL|wxALIGN_LEFT</flag>
 											<border>5</border>
 											<option>1</option>
 										</object>
 									</object>
-									<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+									<flag>wxALL|wxEXPAND</flag>
 									<border>8</border>
 								</object>
 							</object>
@@ -300,7 +300,7 @@
 										<label>Show documentation window side-by-side to the code-completion list:</label>
 										<style>wxALIGN_LEFT</style>
 									</object>
-									<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+									<flag>wxALL|wxALIGN_LEFT</flag>
 									<border>10</border>
 								</object>
 								<object class="sizeritem">
@@ -311,7 +311,7 @@
 												<label>Always</label>
 												<style>wxRB_GROUP</style>
 											</object>
-											<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<flag>wxALL|wxEXPAND</flag>
 											<border>5</border>
 											<option>1</option>
 										</object>
@@ -319,7 +319,7 @@
 											<object class="wxRadioButton" name="rbDocOnly">
 												<label>Only when description is available</label>
 											</object>
-											<flag>wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+											<flag>wxALL|wxEXPAND</flag>
 											<border>5</border>
 											<option>1</option>
 										</object>
@@ -327,12 +327,12 @@
 											<object class="wxRadioButton" name="rbDocNot">
 												<label>Do not show</label>
 											</object>
-											<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<flag>wxALL|wxEXPAND</flag>
 											<border>5</border>
 											<option>1</option>
 										</object>
 									</object>
-									<flag>wxLEFT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+									<flag>wxLEFT|wxALIGN_LEFT</flag>
 									<border>20</border>
 								</object>
 							</object>
@@ -340,7 +340,7 @@
 						<label>Documentation</label>
 					</object>
 				</object>
-				<flag>wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+				<flag>wxLEFT|wxEXPAND</flag>
 				<border>8</border>
 				<option>1</option>
 			</object>

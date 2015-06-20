@@ -18,7 +18,7 @@ FInfoWindow::FInfoWindow()
     //ctor
     m_pView = new cbStyledTextCtrl(this, wxID_ANY, wxDefaultPosition, wxSize(1,1));
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-    sizer->Add(m_pView, 1, wxEXPAND|wxALIGN_CENTER_VERTICAL, 0);
+    sizer->Add(m_pView, 1, wxEXPAND, 0);
     SetSizer(sizer);
     sizer->Fit(this);
     sizer->SetSizeHints(this);
