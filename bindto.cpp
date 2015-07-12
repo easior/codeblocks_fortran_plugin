@@ -11,6 +11,7 @@
 #include <projectmanager.h>
 #include <logmanager.h>
 #include <cbproject.h>
+#include <compilerfactory.h>
 #include <wx/regex.h>
 #include <wx/tokenzr.h>
 #include <wx/textdlg.h>
@@ -284,6 +285,7 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
 
 	Connect(ID_BTOACTIVEPROJECT,wxEVT_COMMAND_RADIOBUTTON_SELECTED,(wxObjectEventFunction)&Bindto::Onrb_ActiveProjectSelect);
 	Connect(ID_BTOCURRENTFILE,wxEVT_COMMAND_RADIOBUTTON_SELECTED,(wxObjectEventFunction)&Bindto::Onrb_ActiveProjectSelect);
+	Connect(ID_CHECKBOX3,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&Bindto::Oncb_globalToOneClick);
 	Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Bindto::Onbt_OutputDirClick);
 	Connect(ID_BUTTON_ADD,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Bindto::OnAdd);
 	Connect(ID_BUTTON_COPY,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Bindto::OnCopy);
@@ -344,8 +346,16 @@ Bindto::Bindto(wxWindow* parent, ParserF* pParser)
     if (rb_ActiveProject->GetValue())
         enab = true;
     cb_globalToOne->Enable(enab);
-    tc_globalFilename->Enable(enab);
-    st_globalFilename->Enable(enab);
+    if (enab && cb_globalToOne->GetValue())
+    {
+        tc_globalFilename->Enable(true);
+        st_globalFilename->Enable(true);
+    }
+    else
+    {
+        tc_globalFilename->Enable(false);
+        st_globalFilename->Enable(false);
+    }
 
     GetInitialOutputDir(m_InitialOutputDirFile, m_InitialOutputDirProj);
     if (rb_CurrentFile->GetValue())
@@ -685,10 +695,12 @@ void Bindto::OnOK(wxCommandEvent& event)
     m_PyGenCython = cb_genCython->GetValue();
     m_PyFuncName = tc_pyFunName->GetValue();
     m_PyFuncName.Replace(_T(" "),_T(""));
-    if (m_PyGenCython && !VlidatePyFuncName())
+    if (m_PyGenCython && !ValidatePyFuncName())
         return;
     m_PyCreateClass = cb_pyGenClass->GetValue();
     m_PyFirstArgAsSelf = cb_pyFirstSelf->GetValue();
+
+    m_FileWasCreated = false;
 
     SaveBindToConfig();
     MakeBindTo(btin);
@@ -703,6 +715,11 @@ void Bindto::OnOK(wxCommandEvent& event)
         }
         wxMessageBox( msg, _("Bindto Info"), wxICON_INFORMATION, this);
     }
+    if (btin == bindToProject && m_FileWasCreated)
+    {
+        wxString msg = _("Generated files were written to ") + m_OutputDir + _(" directory.");
+        wxMessageBox( msg, _("Bindto"), wxICON_INFORMATION, this);
+    }
 
     EndModal(wxID_OK);
 }
@@ -712,9 +729,36 @@ void Bindto::MakeBindTo(BindToIn btin)
     if (!Manager::Get()->GetEditorManager() || !m_pParser)
         return;
 
+    m_ProjectBinDir = _T("");
+    m_IsTargetStaticLib = false;
+    cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (project)
+    {
+        ProjectBuildTarget* bTarget = project->GetBuildTarget(project->GetActiveBuildTarget());
+        if (bTarget)
+        {
+            wxFileName efn(project->GetBasePath());
+            wxFileName ofn(bTarget->GetOutputFilename());
+            wxArrayString dirs = ofn.GetDirs();
+            for (size_t i=0; i<dirs.size(); i++)
+                efn.AppendDir(dirs[i]);
+            m_ProjectBinDir = efn.GetPath();
+
+            wxFileName lfn;
+            if (bTarget->GetTargetType() == ttStaticLib)
+            {
+                lfn = bTarget->GetStaticLibFilename();
+                m_IsTargetStaticLib = true;
+            }
+            else if (bTarget->GetTargetType() == ttDynamicLib)
+                lfn = bTarget->GetDynamicLibFilename();
+            m_TargetLibraryName = lfn.GetName();
+            m_TargetCompilerName = bTarget->GetCompilerID();
+        }
+    }
+
     if (btin == bindToProject)
     {
-        cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
         if (!project)
             return;
 
@@ -725,6 +769,9 @@ void Bindto::MakeBindTo(BindToIn btin)
         m_GlobWriteStrCtoF = false;
         m_GlobWriteStrFtoC = false;
         m_GlobWriteStrLen = false;
+
+        m_TxtCythonFirstGlob = _T("");
+        m_TxtCythonGlob = _T("");
 
         wxArrayString nonFFiles;
         wxArrayString projFiles;
@@ -781,7 +828,7 @@ void Bindto::MakeBindTo(BindToIn btin)
             wxString helperMod = GetHelperModule(true);
             wxString strGlobMod;
             m_Indent = 0;
-            strGlobMod << _T("module ") << fname.GetName() << _T("_bc\n");
+            strGlobMod << _T("module ") << fname.GetName() << _T("\n");
             m_Indent++;
             strGlobMod << GetIS() << _T("use, intrinsic :: iso_c_binding\n");
             if (!helperMod.IsEmpty())
@@ -794,11 +841,12 @@ void Bindto::MakeBindTo(BindToIn btin)
             wxFile f(fname.GetFullPath(), wxFile::write);
             cbWrite(f, m_GlobProcWarnMessages + SplitLines(helperMod,Fortran) + strGlobMod +
                     SplitLines(m_GlobProceduresFile,Fortran) + strGlobModEnd + GetEOLStr(), wxFONTENCODING_UTF8);
+            m_FileWasCreated = true;
 
+            wxFileName hfname(fname);
+            hfname.SetExt(_T("h"));
             if (!m_GlobProceduresFileH.IsEmpty())
             {
-                wxFileName hfname(fname);
-                hfname.SetExt(_T("h"));
 
                 wxString hstr1;
                 hstr1 << _T("#ifndef ") << hfname.GetName().Upper() << _T("_H") << _T("\n");
@@ -814,11 +862,46 @@ void Bindto::MakeBindTo(BindToIn btin)
                 cbWrite(hf, hstr1 + _T("\n") + SplitLines(m_GlobProceduresFileH,C) + hstr2 + GetEOLStr(), wxFONTENCODING_UTF8);
             }
 
+            // Write Cython file for global procedures
+            if (m_PyGenCython)
+            {
+                wxString txtCythonHead;
+                txtCythonHead << _T("#!python\n#cython: boundscheck=False, wraparound=False\n");
+                txtCythonHead << _T("import numpy as np\ncimport numpy as np\n");
+                if (!m_PyIncludeGlob.empty())
+                {
+                    StrSet::iterator it;
+                    for (it=m_PyIncludeGlob.begin(); it != m_PyIncludeGlob.end(); ++it)
+                        txtCythonHead << *it << _T("\n");
+                }
+                txtCythonHead << _T("\n");
+                txtCythonHead << _T("cdef extern from \"") << hfname.GetFullName() << _T("\":\n");
+
+                wxFileName pyxfname(fname);
+                pyxfname.SetExt(_T("pyx"));
+                wxFile pyxf(pyxfname.GetFullPath(), wxFile::write);
+                cbWrite(pyxf, txtCythonHead + m_TxtCythonFirstGlob + SplitLines(m_TxtCythonGlob,Python) +
+                        GetEOLStr(), wxFONTENCODING_UTF8);
+
+                m_PyxFileArr.Add(pyxfname.GetFullPath());
+            }
+
             if (!m_GlobProcWarnMessages.IsEmpty())
             {
                 m_CreatedMsg.Add(_("\nThere were problems met during the generation of wrapping. A message was added to the beginning of ")
                                  +fname.GetFullName()+_(" file."));
             }
+        }
+
+        if (m_PyGenCython && !m_PyxFileArr.IsEmpty())
+        {
+
+
+            wxFileName sn(m_PyxFileArr.Item(0));
+            wxFileName profn(project->GetFilename());
+            sn.SetName(_T("setup_") + profn.GetName());
+            sn.SetExt(_T("py"));
+            WriteSetupPy(m_PyxFileArr, sn.GetFullPath(), m_ProjectBinDir);
         }
 
         if (nonFFiles.size() > 0)
@@ -846,8 +929,8 @@ void Bindto::MakeBindTo(BindToIn btin)
                 mstr << wxString::Format(_T("(%d "), nonFFiles.size()) << _("files) ");
                 mstr << _("were not recognized as the Fortran files.");
                 mstr << _(" The BindTo was not applied for them.");
-                wxMessageBox(mstr, _("Info"), wxICON_INFORMATION, this);
             }
+            wxMessageBox(mstr, _("Info"), wxICON_INFORMATION, this);
         }
     }
     else
@@ -880,7 +963,7 @@ void Bindto::FileBindTo(const wxString& filename)
     m_CStructs = _T("");
     m_WarnMessage = _T("");
     wxString txtBindGM;
-    wxString txtBindMod;
+    wxString txtBindModFile;
     wxString txtHeadersGM;
     wxString txtHeadersMod;
     bool inModuleGM = false;
@@ -896,8 +979,9 @@ void Bindto::FileBindTo(const wxString& filename)
     m_InFortranModule = false;
 
     wxString txtCythonFirst;
+    wxString txtCythonFirstGP;
     wxString txtCythonGP;
-    wxString txtCythonMod;
+    wxString txtCythonModFile;
     m_PyInclude.clear();
 
     TokensArrayF* fchen = &fileToken->m_Children;
@@ -918,22 +1002,28 @@ void Bindto::FileBindTo(const wxString& filename)
                 txtHeadersGM << _T("// Global procedures\n");
             }
             m_Indent = 1;
-            BindProcedure(txtBindGM, txtHeadersGM, txtCythonFirst, txtCythonGP, fchen->Item(i), globModName, true);
+            BindProcedure(txtBindGM, txtHeadersGM, txtCythonFirstGP, txtCythonGP, fchen->Item(i), globModName, true);
         }
         else if (fchen->Item(i)->m_TokenKind == tkModule)
         {
+            wxString txtBindModHeader;
+            wxString txtBindMod;
+            wxString txtCythonModHeader;
+            wxString txtCythonMod;
             m_InFortranModule = true;
             wxString modName = fchen->Item(i)->m_Name;
             m_CurModule = modName;
-            txtBindMod << _T("module ") << modName << _T("_bc\n");
+            txtBindModHeader << _T("module ") << modName << _T("_bc\n");
             m_Indent = 1;
-            txtBindMod << GetIS() << _T("use :: ") << modName << _T("\n");
-            txtBindMod << GetIS() << _T("use, intrinsic :: iso_c_binding\n");
-            txtBindMod << _T("$#$#%^@@place for helper module$#@%");
-            txtBindMod << GetIS() << _T("implicit none\n");
-            txtBindMod << _T("contains\n\n");
+            txtBindModHeader << GetIS() << _T("use :: ") << modName << _T("\n");
+            txtBindModHeader << GetIS() << _T("use, intrinsic :: iso_c_binding\n");
+            txtBindModHeader << _T("$#$#%^@@place for helper module$#@%");
+            txtBindModHeader << GetIS() << _T("implicit none\n");
+            txtBindModHeader << _T("contains\n\n");
 
-            txtHeadersMod << _T("\n// Module '") << modName << _T("' procedures\n");
+            wxString txtHeadersMod_1;
+            wxString txtHeadersMod_2;
+            txtHeadersMod_1 << _T("\n// Module '") << modName << _T("' procedures\n");
             m_DefinedTypes.clear();
             m_NoArgConstructors.clear();
             m_Deallocators.clear();
@@ -942,9 +1032,9 @@ void Bindto::FileBindTo(const wxString& filename)
 
             if (m_PyCreateClass)
             {
-                txtCythonMod << _T("\ncdef class ") << modName << _T(":\n");
-                txtCythonMod << _T("%%%##@@@@Place For Cdefs%%%@@@");
-                txtCythonMod << _T("@@%##@@@@Place For __init__dealloc__%%%@%%");
+                txtCythonModHeader << _T("\ncdef class ") << modName << _T(":\n");
+                txtCythonModHeader << _T("%%%##@@@@Place For Cdefs%%%@@@");
+                txtCythonModHeader << _T("@@%##@@@@Place For __init__dealloc__%%%@%%");
                 m_PyIndent = 1;
             }
 
@@ -965,7 +1055,7 @@ void Bindto::FileBindTo(const wxString& filename)
                     mchil->Item(j)->m_TokenKind == tkFunction) &&
                     mchil->Item(j)->m_TokenAccess == taPublic)
                 {
-                    BindProcedure(txtBindMod, txtHeadersMod, txtCythonFirst, txtCythonMod, mchil->Item(j), modName, false);
+                    BindProcedure(txtBindMod, txtHeadersMod_2, txtCythonFirst, txtCythonMod, mchil->Item(j), modName, false);
                     m_ModuleChildNames.insert(mchil->Item(j)->m_Name);
                 }
                 else if (mchil->Item(j)->m_TokenKind == tkInterfaceExplicit &&
@@ -978,7 +1068,7 @@ void Bindto::FileBindTo(const wxString& filename)
                             intchs->Item(k)->m_TokenKind == tkFunction) &&
                             intchs->Item(k)->m_TokenAccess == taPublic)
                         {
-                            BindProcedure(txtBindMod, txtHeadersMod, txtCythonFirst, txtCythonMod, intchs->Item(k), modName, false);
+                            BindProcedure(txtBindMod, txtHeadersMod_2, txtCythonFirst, txtCythonMod, intchs->Item(k), modName, false);
                             m_ModuleChildNames.insert(intchs->Item(k)->m_Name);
                         }
                     }
@@ -998,7 +1088,7 @@ void Bindto::FileBindTo(const wxString& filename)
                                 mchil->Item(l)->m_TokenAccess == taPrivate &&   // items with taPublic are called separately
                                 mchil->Item(l)->m_Name.IsSameAs(iname))
                             {
-                                BindProcedure(txtBindMod, txtHeadersMod, txtCythonFirst, txtCythonMod, mchil->Item(l), modName, false, mchil->Item(j)->m_DisplayName);
+                                BindProcedure(txtBindMod, txtHeadersMod_2, txtCythonFirst, txtCythonMod, mchil->Item(l), modName, false, mchil->Item(j)->m_DisplayName);
                                 m_ModuleChildNames.insert(mchil->Item(l)->m_Name);
                             }
                         }
@@ -1011,14 +1101,13 @@ void Bindto::FileBindTo(const wxString& filename)
                 }
             }
             wxString txtCythonCtorDtor;
-            AddConstructors(txtBindMod, txtHeadersMod, txtCythonCtorDtor, txtCythonFirst, modName);
-            AddDestructors(txtBindMod, txtHeadersMod, txtCythonCtorDtor, txtCythonFirst, modName);
-            txtBindMod << _T("end module\n\n");
+            AddConstructors(txtBindMod, txtHeadersMod_2, txtCythonCtorDtor, txtCythonFirst, modName);
+            AddDestructors(txtBindMod, txtHeadersMod_2, txtCythonCtorDtor, txtCythonFirst, modName);
             m_CurModule = wxEmptyString;
             m_InFortranModule = false;
             m_PyIndent = 0;
             if (m_DefinedTypes.size() == 0)
-                txtCythonMod.Replace(_T("%%%##@@@@Place For Cdefs%%%@@@"),_T(""));
+                txtCythonModHeader.Replace(_T("%%%##@@@@Place For Cdefs%%%@@@"),_T(""));
             else
             {
                 wxString txtCythonCdefs;
@@ -1026,10 +1115,24 @@ void Bindto::FileBindTo(const wxString& filename)
                 {
                     txtCythonCdefs << GetIS(1) << _T("cdef void* _") << *it << _T("_cp\n");
                 }
-                txtCythonMod.Replace(_T("%%%##@@@@Place For Cdefs%%%@@@"),txtCythonCdefs);
+                txtCythonModHeader.Replace(_T("%%%##@@@@Place For Cdefs%%%@@@"),txtCythonCdefs);
             }
 
-            txtCythonMod.Replace(_T("@@%##@@@@Place For __init__dealloc__%%%@%%"), txtCythonCtorDtor);
+            txtCythonModHeader.Replace(_T("@@%##@@@@Place For __init__dealloc__%%%@%%"), txtCythonCtorDtor);
+
+            if (!txtBindMod.IsEmpty())
+            {
+                txtBindModFile << txtBindModHeader;
+                txtBindModFile << txtBindMod;
+                txtBindModFile << _T("end module\n\n");
+            }
+            if (!txtCythonMod.IsEmpty() || !txtCythonCtorDtor.IsEmpty() || (m_DefinedTypes.size() > 0))
+            {
+                txtCythonModFile << txtCythonModHeader;
+                txtCythonModFile << txtCythonMod;
+            }
+            if (!txtHeadersMod_2.IsEmpty())
+                txtHeadersMod << txtHeadersMod_1 << txtHeadersMod_2;
         }
     }
     if (inModuleGM && !m_UseOneGlobalFile)
@@ -1041,10 +1144,10 @@ void Bindto::FileBindTo(const wxString& filename)
     else if (!txtBindGM.empty())
         txtBindGM.Replace(_T("$#$#%^@@place for helper module$#@%"),_T(""));
 
-    if (!helperMod.empty() && !txtBindMod.empty())
-        txtBindMod.Replace(_T("$#$#%^@@place for helper module$#@%"),GetIS(1) + _T("use :: bindc_helper_bc\n"));
-    else if (!txtBindMod.empty())
-        txtBindMod.Replace(_T("$#$#%^@@place for helper module$#@%"),_T(""));
+    if (!helperMod.empty() && !txtBindModFile.empty())
+        txtBindModFile.Replace(_T("$#$#%^@@place for helper module$#@%"),GetIS(1) + _T("use :: bindc_helper_bc\n"));
+    else if (!txtBindModFile.empty())
+        txtBindModFile.Replace(_T("$#$#%^@@place for helper module$#@%"),_T(""));
 
     wxString bfname = CreateBindFilename(filename, false);
     if (bfname.IsEmpty())
@@ -1072,11 +1175,12 @@ void Bindto::FileBindTo(const wxString& filename)
         if (!txtHeadersGM.IsEmpty())
             m_GlobProceduresFileH << _T("\n") << txtHeadersGM;
 
-        if (!txtBindMod.IsEmpty())
+        if (!txtBindModFile.IsEmpty())
         {
             wxFile f(bfname, wxFile::write);
             cbWrite(f, m_WarnMessage + SplitLines(helperMod,Fortran) +
-                    SplitLines(txtBindMod,Fortran) + GetEOLStr(), wxFONTENCODING_UTF8);
+                    SplitLines(txtBindModFile,Fortran) + GetEOLStr(), wxFONTENCODING_UTF8);
+            m_FileWasCreated = true;
         }
 
         if (!m_CInclude.empty())
@@ -1095,19 +1199,70 @@ void Bindto::FileBindTo(const wxString& filename)
         if (!m_GlobWriteStrLen)
             m_GlobWriteStrLen = m_WriteStrLen;
 
+        if (!txtHeadersMod.IsEmpty())
+        {
+            wxFileName hfname(hname);
+            wxString hstr1;
+            hstr1 << _T("#ifndef ") << hfname.GetName().Upper() << _T("_H") << _T("\n");
+            hstr1 << _T("#define ") << hfname.GetName().Upper() << _T("_H") << _T("\n\n");
+            if (!m_CInclude.empty())
+            {
+                StrSet::iterator it;
+                for (it=m_CInclude.begin(); it != m_CInclude.end(); ++it)
+                    hstr1 << *it << _T("\n");
+            }
+            wxString hstr2 = _T("\n#endif");
+
+            wxFile hf(hname, wxFile::write);
+            cbWrite(hf, hstr1 + m_CStructs + _T("\n") + SplitLines(txtHeadersMod,C) +
+                     hstr2 + GetEOLStr(), wxFONTENCODING_UTF8);
+        }
+
+        if (m_PyGenCython)
+        {
+            wxString txtCythonHead;
+            txtCythonHead << _T("#!python\n#cython: boundscheck=False, wraparound=False\n");
+            txtCythonHead << _T("import numpy as np\ncimport numpy as np\n");
+            if (!m_PyInclude.empty())
+            {
+                StrSet::iterator it;
+                for (it=m_PyInclude.begin(); it != m_PyInclude.end(); ++it)
+                {
+                    txtCythonHead << *it << _T("\n");
+                    m_PyIncludeGlob.insert(*it);
+                }
+            }
+            txtCythonHead << _T("\n");
+            wxFileName hfname(hname);
+            txtCythonHead << _T("cdef extern from \"") << hfname.GetFullName() << _T("\":\n");
+
+            if (!txtCythonModFile.IsEmpty())
+            {
+                wxFile pyxf(pyname, wxFile::write);
+                cbWrite(pyxf, txtCythonHead + txtCythonFirst + SplitLines(txtCythonModFile,Python) +
+                        GetEOLStr(), wxFONTENCODING_UTF8);
+                m_PyxFileArr.Add(pyname);
+            }
+
+            m_TxtCythonFirstGlob << txtCythonFirstGP;
+            m_TxtCythonGlob << txtCythonGP;
+        }
+
         if (!m_WarnMessage.IsEmpty())
         {
+            wxFileName bfn(bfname);
             wxString msg;
             msg << _("\nThere were problems met during the generation of wrapping.");
-            msg << _("\nA message was added to the beginning of generated file.");
+            msg << _("\nA message was added to the beginning of ") << bfn.GetFullName() << _(" file.");
             m_CreatedMsg.Add(msg);
         }
     }
-    else
+    else // if(!m_UseOneGlobalFile)
     {
         wxFile f(bfname, wxFile::write);
         cbWrite(f, m_WarnMessage + SplitLines(helperMod,Fortran) + SplitLines(txtBindGM,Fortran) +
-                SplitLines(txtBindMod,Fortran) + GetEOLStr(), wxFONTENCODING_UTF8);
+                SplitLines(txtBindModFile,Fortran) + GetEOLStr(), wxFONTENCODING_UTF8);
+        m_FileWasCreated = true;
 
         wxFileName hfname(hname);
         wxString hstr1;
@@ -1135,16 +1290,23 @@ void Bindto::FileBindTo(const wxString& filename)
                 txtCythonHead << *it << _T("\n");
         }
         txtCythonHead << _T("\n");
-
         txtCythonHead << _T("cdef extern from \"") << hfname.GetFullName() << _T("\":\n");
         wxString pyFiles;
         if (m_PyGenCython)
         {
             wxFile pyxf(pyname, wxFile::write);
-            cbWrite(pyxf, txtCythonHead + txtCythonFirst + SplitLines(txtCythonGP,Python) + SplitLines(txtCythonMod,Python) +
-                    GetEOLStr(), wxFONTENCODING_UTF8);
+            cbWrite(pyxf, txtCythonHead + txtCythonFirstGP + txtCythonFirst + SplitLines(txtCythonGP,Python) +
+                    SplitLines(txtCythonModFile,Python) + GetEOLStr(), wxFONTENCODING_UTF8);
             wxFileName pyfn(pyname);
             pyFiles << _T(", ") << pyfn.GetFullName();
+
+            //write setup*.py
+            wxArrayString pyxFArr;
+            pyxFArr.Add(pyname);
+            pyfn.SetExt(_T("py"));
+            wxString name = pyfn.GetName();
+            pyfn.SetName(_T("setup_"+name));
+            WriteSetupPy(pyxFArr, pyfn.GetFullPath(), m_ProjectBinDir);
         }
 
         wxFileName bfn(bfname);
@@ -3134,8 +3296,16 @@ void Bindto::Onrb_ActiveProjectSelect(wxCommandEvent& event)
         enab = true;
 
     cb_globalToOne->Enable(enab);
-    tc_globalFilename->Enable(enab);
-    st_globalFilename->Enable(enab);
+    if (enab && cb_globalToOne->GetValue())
+    {
+        tc_globalFilename->Enable(true);
+        st_globalFilename->Enable(true);
+    }
+    else
+    {
+        tc_globalFilename->Enable(false);
+        st_globalFilename->Enable(false);
+    }
 
     wxString initstr;
     if (rb_ActiveProject->GetValue())
@@ -3166,10 +3336,10 @@ Bindto::TypePyx Bindto::GetBindTypePy(const TypeBind& tya, const wxString& varNa
     tyaPy.copy = false;
     tyaPy.ndim = 0;
     wxString fTName;
-    wxString decPyx;
+    wxString decPyx = tya.cType;
 
-    if (tya.cType.EndsWith(_T("*")))
-        decPyx = tya.cType.Mid(0,tya.cType.size()-1);
+    if (decPyx.EndsWith(_T("*")))
+        decPyx = decPyx.Mid(0,decPyx.size()-1);
     if (decPyx.IsSameAs(_T("void*")) || decPyx.IsSameAs(_T("void")))
     {
         if (tya.fType.StartsWith(_T("type(")))
@@ -3386,7 +3556,7 @@ bool Bindto::MakeOutputDir()
     return true;
 }
 
-bool Bindto::VlidatePyFuncName()
+bool Bindto::ValidatePyFuncName()
 {
     wxString msg;
     if (m_PyFuncName.IsEmpty())
@@ -3644,4 +3814,84 @@ void Bindto::AddPyArgs(const wxArrayString& argArr, wxArrayString& morePyIntArgs
         if (argArr.Index(addIntArg.Item(i)) == wxNOT_FOUND && morePyIntArgs.Index(addIntArg.Item(i)) == wxNOT_FOUND)
             morePyIntArgs.Add(addIntArg.Item(i));
     }
+}
+
+void Bindto::WriteSetupPy(const wxArrayString& pyxFArr, const wxString& setupPyFn, const wxString& binDir)
+{
+    wxFileName sfn(setupPyFn);
+    wxFileName bdir;
+    bdir.SetPath(binDir);
+    bdir.MakeRelativeTo(sfn.GetPath());
+    wxString pyxFileName;
+
+    if (pyxFArr.size() > 1)
+    {
+        // Create one pyx file which includes other
+        wxFileName cpyxf(pyxFArr.Item(0));
+        cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
+        if (project)
+        {
+            wxFileName profn(project->GetFilename());
+            cpyxf.SetName(profn.GetName());
+        }
+        else
+            cpyxf.SetName(_T("project"));
+
+        wxString compyx;
+        for (size_t i=0; i<pyxFArr.size(); i++)
+        {
+            wxFileName pfn(pyxFArr.Item(i));
+            compyx << _T("include \"") << pfn.GetFullName() << _T("\"\n");
+        }
+
+        wxFile f(cpyxf.GetFullPath(), wxFile::write);
+        cbWrite(f, compyx + GetEOLStr(), wxFONTENCODING_UTF8);
+        pyxFileName = cpyxf.GetFullPath();
+    }
+    else
+        pyxFileName = pyxFArr.Item(0);
+
+    wxString part1;
+    part1 << _T("# Run this file using:\n");
+    part1 << _T("# python ") + sfn.GetFullName() + _T(" build_ext --inplace\n\n");
+    part1 << _T("from distutils.core import setup\n");
+    part1 << _T("from distutils.extension import Extension\n");
+    part1 << _T("from Cython.Build import cythonize\n");
+    part1 << _T("import numpy\n\n");
+    part1 << _T("extensions = [\n");
+
+    wxString part2;
+    wxFileName pfn(pyxFileName);
+    part2 << GetIS(1) << _T("Extension('") << pfn.GetName() << _T("', ['") << pfn.GetFullName() << _T("'],\n");
+    part2 << GetIS(2) << _T("runtime_library_dirs=['./'],\n");
+    part2 << GetIS(2) << _T("library_dirs=['") << bdir.GetPath() << _T("'],\n");
+    part2 << GetIS(2) << _T("include_dirs=[numpy.get_include()],\n");
+    part2 << GetIS(2) << _T("libraries=[");
+    if (!m_TargetLibraryName.IsEmpty())
+    {
+        wxString shortLN = m_TargetLibraryName;
+        if (shortLN.StartsWith(_T("lib")))
+            shortLN = shortLN.Mid(3);
+        part2 << _T("'") << shortLN << _T("'");
+        if (m_IsTargetStaticLib && !m_TargetCompilerName.IsEmpty() && CompilerFactory::CompilerInheritsFrom(m_TargetCompilerName, _T("gfortran")))
+            part2 << _T(", 'gfortran'");
+    }
+    part2 << _T("],\n");
+    part2 << GetIS(2) << _T("),\n");
+    part2 << GetIS(1) << _T("]\n");
+
+    wxString part3;
+    part3 << _T("setup(\n");
+    part3 << GetIS(1) << _T("ext_modules = cythonize(extensions),\n");
+    part3 << _T(")\n");
+
+    wxFile f(sfn.GetFullPath(), wxFile::write);
+    cbWrite(f, part1 + part2 + part3 + GetEOLStr(), wxFONTENCODING_UTF8);
+}
+
+void Bindto::Oncb_globalToOneClick(wxCommandEvent& event)
+{
+    bool enab = cb_globalToOne->GetValue();
+    tc_globalFilename->Enable(enab);
+    st_globalFilename->Enable(enab);
 }

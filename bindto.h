@@ -125,6 +125,7 @@ class Bindto: public wxDialog
 		void Onbt_OutputDirClick(wxCommandEvent& event);
 		void Oncb_genCythonClick(wxCommandEvent& event);
 		void OnCopy(wxCommandEvent& event);
+		void Oncb_globalToOneClick(wxCommandEvent& event);
 		//*)
 
 		enum Language
@@ -186,6 +187,10 @@ class Bindto: public wxDialog
         bool m_LogToInt;
         TypeMap m_GlobLogFunMap;
         StrSet  m_LogTypeSet;
+        wxString m_ProjectBinDir;
+        wxString m_TargetLibraryName;
+        bool m_IsTargetStaticLib;
+        wxString m_TargetCompilerName;
 
         bool m_UseOneGlobalFile;
         wxString m_GlobProceduresFile;
@@ -212,6 +217,8 @@ class Bindto: public wxDialog
         wxString m_CurFile;
         bool m_InFortranModule;
         BTDirMap m_BTDirMap;
+        bool m_FileWasCreated;
+        wxArrayString m_PyxFileArr;
 
         bool m_PyGenCython;
         StrSet m_PyInclude;
@@ -221,6 +228,10 @@ class Bindto: public wxDialog
         bool m_PyFirstArgAsSelf;
         bool m_HasPyClassConstructor;
         StrMap m_C2NumpyTypes;
+
+        StrSet m_PyIncludeGlob;
+        wxString m_TxtCythonFirstGlob;
+        wxString m_TxtCythonGlob;
 
         void FillC2NumpyTypesMap();
         void FillTypeList();
@@ -269,13 +280,14 @@ class Bindto: public wxDialog
         wxString CreateCythonFilename(const wxString& filename);
         void GetInitialOutputDir(wxString& initialOutputDirFile, wxString& initialOutputDirProj);
         bool MakeOutputDir();
-        bool VlidatePyFuncName();
+        bool ValidatePyFuncName();
         void ShowNewTypeDlg(BindtoNewType& addNewType);
         void PrepateTypes(wxString& ft, wxString& bt, wxString& ct);
         wxArrayString GetLogFunNames(const wxString& fType);
         void ParseBindtoDirectives(const TokenF* parentToken);
         wxArrayString GetDimArr(const wxString& dimStr);
         void AddPyArgs(const wxArrayString& argArr, wxArrayString& morePyIntArgs, const wxArrayString& addIntArg);
+        void WriteSetupPy(const wxArrayString& pyxFArr, const wxString& setupPyFn, const wxString& binDir);
 
 		DECLARE_EVENT_TABLE()
 };
