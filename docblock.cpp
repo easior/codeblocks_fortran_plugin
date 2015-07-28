@@ -244,11 +244,16 @@ wxString HtmlDoc::OnDocumentationLink(wxHtmlLinkEvent &event, bool &dismissPopup
 
 wxString HtmlDoc::GetDocForTooltip(TokenFlat* token)
 {
+    return HtmlDoc::GetDocShort(token->m_DocString);
+}
+
+wxString HtmlDoc::GetDocShort(const wxString& tokDoc)
+{
     wxString doc;
-    if (!token->m_DocString.IsEmpty())
+    if (!tokDoc.IsEmpty())
     {
         const wxString brsep = _T("@brief_end@");
-        size_t brf = token->m_DocString.find(brsep);
+        size_t brf = tokDoc.find(brsep);
         size_t bre_idx = 11;
         if (brf != wxString::npos)
             bre_idx += brf;
@@ -257,11 +262,11 @@ wxString HtmlDoc::GetDocForTooltip(TokenFlat* token)
 
         if (bre_idx > 11)
         {
-            doc = token->m_DocString.substr(0,brf);
+            doc = tokDoc.substr(0,brf);
         }
-        else if (bre_idx < token->m_DocString.size())
+        else if (bre_idx < tokDoc.size())
         {
-            doc = token->m_DocString.substr(bre_idx);
+            doc = tokDoc.substr(bre_idx);
             if (doc.size() > 80) // limit length of doc
                 doc = doc.substr(0,80) + _T("...");
         }

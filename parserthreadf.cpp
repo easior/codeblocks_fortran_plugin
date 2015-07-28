@@ -1015,17 +1015,31 @@ void ParserThreadF::CheckParseOneDeclaration(wxString& token, wxString& tok_low,
             || ( tok_low.IsSameAs(_T("class")) && next_low.StartsWith(_T("(")) )
             || tok_low.IsSameAs(_T("enumerator"))
         )
+    {
+        wxArrayString lineTok = m_Tokens.PeekTokensToEOL();
+        if (lineTok.Index(_T("function"), false) == wxNOT_FOUND)
         {
-            wxArrayString lineTok = m_Tokens.PeekTokensToEOL();
-            if (lineTok.Index(_T("function"), false) == wxNOT_FOUND)
+            DocBlock docs;
+            GetDocBlock(docs, false, m_Tokens.GetLineNumber());
+
+            bool found = ParseDeclarationsFirstPart(token, next);
+            if (found)
             {
-                bool found = ParseDeclarationsFirstPart(token, next);
-                if (found)
+                int ntold = newTokenArr.size();
+                ParseDeclarationsSecondPart(token, needDefault, newTokenArr);
+
+                int ntnew = newTokenArr.size();
+                if ((ntnew-ntold) > 0 && (docs.HasDescription() || docs.HasBrief()))
                 {
-                    ParseDeclarationsSecondPart(token, needDefault, newTokenArr);
+                    for (int i=ntold; i<ntnew; i++)
+                    {
+                        if (newTokenArr.Item(i)->m_DocString.IsEmpty())
+                            newTokenArr.Item(i)->m_DocString << docs.GetBrief() + m_Briefend + docs.GetDescription();
+                    }
                 }
             }
         }
+    }
 }
 
 
@@ -1104,6 +1118,9 @@ void ParserThreadF::ParseDeclarations(bool breakAtEnd, bool breakAtContains)
         int funIdx = lineTok.Index(_T("function"), false);
         if (funIdx == wxNOT_FOUND || (funIdx > 2))
         {
+            DocBlock docs;
+            GetDocBlock(docs, false, m_Tokens.GetLineNumber());
+
             bool found = ParseDeclarationsFirstPart(token, next);
             if (found)
             {
@@ -1115,6 +1132,15 @@ void ParserThreadF::ParseDeclarations(bool breakAtEnd, bool breakAtContains)
                     for (size_t i=0; i<tokArrTmp.Count(); i++)
                     {
                         tokArr.Add(tokArrTmp.Item(i));
+                    }
+                }
+                int tac = tokArrTmp.Count();
+                if (tac > 0 && (docs.HasDescription() || docs.HasBrief()))
+                {
+                    for (int i=0; i<tac; i++)
+                    {
+                        if (tokArrTmp.Item(i)->m_DocString.IsEmpty())
+                            tokArrTmp.Item(i)->m_DocString << docs.GetBrief() + m_Briefend + docs.GetDescription();
                     }
                 }
             }

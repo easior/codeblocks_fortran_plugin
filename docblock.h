@@ -36,6 +36,7 @@ class HtmlDoc
         static wxString GenerateHtmlDoc(TokenFlat* token, int token_idx, bool& hasDoc);
         static wxString OnDocumentationLink(wxHtmlLinkEvent &event, bool &dismissPopup, bool &isGoto, long int &tokenIdx);
         static wxString GetDocForTooltip(TokenFlat* token);
+        static wxString GetDocShort(const wxString& tokDoc);
 };
 
 #endif // DOCBLOCK_H
