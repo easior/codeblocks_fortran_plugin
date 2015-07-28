@@ -1287,7 +1287,7 @@ std::vector<FortranProject::CCCallTip> FortranProject::GetCallTips(int pos, int 
             int commasDif = commas - nCommas;
             if (commasDif > 0)
             {
-                for (int j=0; j< commasDif; i++)
+                for (int j=0; j<commasDif; j++)
                 {
                     ctdef << _T(", *???*");
                 }
